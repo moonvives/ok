@@ -178,7 +178,7 @@ export function detectPlateau(logs = []) {
     .slice(0, 4);
   if (valid.length < 3) return { plateau: false, reason: 'precisa de pelo menos 3 registros recentes.' };
   const newest = valid[0].weight;
-  const oldest = valid.at(-1).weight;
+  const oldest = valid[valid.length - 1].weight;
   const change = Number((oldest - newest).toFixed(1));
   return change < 0.3
     ? { plateau: true, reason: `queda de apenas ${change} kg nos registros recentes.` }

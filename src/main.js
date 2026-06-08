@@ -315,7 +315,7 @@ function bindInteractions() {
     event.preventDefault();
     try {
       const imported = parseMetricJson(metricImport.elements.payload.value);
-      const metrics = Array.isArray(imported) ? imported.at(-1) : imported;
+      const metrics = Array.isArray(imported) ? imported[imported.length - 1] : imported;
       localStorage.setItem('syncedMetrics', JSON.stringify({ ...loadSyncedMetrics(), ...metrics }));
       metricImport.reset();
       updateBiometricPanel(loadSyncedMetrics());

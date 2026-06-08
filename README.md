@@ -20,6 +20,15 @@ npm run start
 
 Abra `http://localhost:5173`.
 
+## Link para abrir
+
+Depois de rodar `npm run start`, use:
+
+- No mesmo computador: `http://localhost:5173`
+- No iPad Pro/Safari: use o link com IP que aparece no terminal, por exemplo `http://192.168.0.23:5173`
+
+O iPad precisa estar na mesma rede Wi-Fi do computador. Veja `docs/access-ipad.md` para o passo a passo completo.
+
 ## Testar e gerar build
 
 ```bash
