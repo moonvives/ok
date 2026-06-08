@@ -154,6 +154,38 @@ export const crisisProtocols = [
   }
 ];
 
+
+export const refinementBacklog = [
+  {
+    area: 'Produto Lovable',
+    priority: 'alta',
+    item: 'Criar versão hospedada com URL pública privada, usando o prompt em lovable/prompt.md e mantendo dados da Sara como perfil fixo.'
+  },
+  {
+    area: 'iPad Pro',
+    priority: 'alta',
+    item: 'Validar layout em Safari iPadOS 12.9, com botões grandes, cards em duas colunas e sem dependência de hover.'
+  },
+  {
+    area: 'Biometria',
+    priority: 'média',
+    item: 'Adicionar gráficos de tendência para sono, HRV, FC repouso, passos, peso e aderência semanal.'
+  },
+  {
+    area: 'Nutrição',
+    priority: 'média',
+    item: 'Adicionar calculadora de porções por refeição e substituições por preferência alimentar.'
+  }
+];
+
+export const lovableHandoff = {
+  promptFile: 'lovable/prompt.md',
+  designFile: 'lovable/design-system.md',
+  dataModelFile: 'lovable/data-model.json',
+  optionalSupabaseFile: 'lovable/supabase-schema.sql',
+  instruction: 'Cole o prompt no Lovable para gerar a versão hospedada. Use Supabase somente se quiser login/cloud; para uso exclusivo, localStorage já atende.'
+};
+
 export function currentPhaseForWeek(week) {
   if (week <= 4) return phasePlan[0];
   if (week <= 16) return phasePlan[1];

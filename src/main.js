@@ -8,7 +8,9 @@ import {
   recipeMatrix,
   saraOnlyMode,
   swapRules,
-  workoutLibrary
+  workoutLibrary,
+  refinementBacklog,
+  lovableHandoff
 } from './personalization.js';
 import {
   adherenceScore,
@@ -175,6 +177,22 @@ function render() {
           <div class="workout-detail-grid">${Object.entries(workoutLibrary).map(workoutDetailCard).join('')}</div>
         </section>
 
+
+        <section class="grid">
+          <article class="panel span-7">
+            <h2>Entrega Lovable refinada</h2>
+            <p class="lead">${lovableHandoff.instruction}</p>
+            ${metric('Prompt principal', lovableHandoff.promptFile)}
+            ${metric('Design system', lovableHandoff.designFile)}
+            ${metric('Modelo de dados', lovableHandoff.dataModelFile)}
+            ${metric('Supabase opcional', lovableHandoff.optionalSupabaseFile)}
+          </article>
+          <article class="panel span-5">
+            <h2>Backlog premium imediato</h2>
+            <div class="protocol-grid compact">${refinementBacklog.map(backlogCard).join('')}</div>
+          </article>
+        </section>
+
         <section class="grid" id="sync">
           <article class="panel span-7">
             <h2>Central biométrica estilo Bevel, WHOOP e Oura</h2>
@@ -266,6 +284,10 @@ function recipeCard(recipe) {
 
 function workoutDetailCard([day, exercises]) {
   return `<article class="workout-detail"><h3>${day}</h3>${exercises.map(([name, dose]) => `<div class="log-entry"><strong>${name}</strong><span>${dose}</span></div>`).join('')}</article>`;
+}
+
+function backlogCard(item) {
+  return `<article class="protocol-card"><h3>${item.area}</h3><b>${item.priority}</b><p>${item.item}</p></article>`;
 }
 
 function integrationCard(source) {

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { parseMetricJson, normalizeMetricPayload, connectionLabel } from '../src/integrations.js';
+import { lovableHandoff, refinementBacklog } from '../src/personalization.js';
 
 import {
   buildTodayPlan,
@@ -99,5 +100,13 @@ describe('Sara-only personalization engine', () => {
     const today = buildTodayPlan({ dayName: 'Segunda', logs: [{ weight: 72.9 }, { weight: 73.0 }, { weight: 73.1 }] });
     assert.equal(today.workout.length, workoutLibrary.Segunda.length);
     assert.match(today.priority, /treino|recuperação/);
+  });
+});
+
+describe('Lovable handoff package', () => {
+  it('points to the Lovable prompt and premium refinement backlog', () => {
+    assert.equal(lovableHandoff.promptFile, 'lovable/prompt.md');
+    assert.ok(refinementBacklog.length >= 4);
+    assert.ok(refinementBacklog.some((item) => item.area.includes('Produto Lovable')));
   });
 });

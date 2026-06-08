@@ -37,6 +37,15 @@ npm test
 npm run build
 ```
 
+## Lovable
+
+Para fazer a versão hospedada no Lovable, use o pacote em `lovable/`:
+
+- `lovable/prompt.md`: prompt completo para colar no Lovable.
+- `lovable/design-system.md`: direção visual premium.
+- `lovable/data-model.json`: dados fixos da Sara e chaves de métricas.
+- `lovable/supabase-schema.sql`: schema opcional se quiser login/cloud; para uso exclusivo, localStorage continua suficiente.
+
 ## Integrações
 
 Leia `docs/integrations.md` para detalhes sobre Apple Health, Garmin e o formato JSON de importação local. O app não usa Sci-Hub nem cópias não autorizadas de artigos pagos.
