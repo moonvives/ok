@@ -1,0 +1,319 @@
+:root {
+  --green: #174d3d;
+  --green-light: #2f7d62;
+  --gold: #f3b83f;
+  --cream: #fff7e8;
+  --ink: #1f2933;
+  --muted: #667085;
+  --card: #ffffff;
+  --shadow: 0 24px 60px rgba(31, 41, 51, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--ink);
+  background: linear-gradient(180deg, var(--cream) 0%, #ffffff 42%, #f6fbf8 100%);
+}
+
+.hero {
+  min-height: 92vh;
+  padding: 24px clamp(20px, 5vw, 72px) 80px;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(243, 184, 63, 0.34), transparent 28%),
+    radial-gradient(circle at 18% 82%, rgba(255, 255, 255, 0.16), transparent 24%),
+    linear-gradient(135deg, rgba(23, 77, 61, 0.98), rgba(47, 125, 98, 0.92));
+  color: #fff;
+}
+
+.nav,
+.hero-content,
+.section,
+footer {
+  width: min(1120px, 100%);
+  margin-inline: auto;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.brand,
+.nav-links a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.brand-mark {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.72);
+  border-radius: 50%;
+  color: var(--gold);
+  font-family: Georgia, "Times New Roman", serif;
+}
+
+.nav-links {
+  display: flex;
+  gap: clamp(14px, 3vw, 32px);
+  font-weight: 700;
+}
+
+.nav-links a {
+  opacity: 0.86;
+}
+
+.nav-links a:hover {
+  opacity: 1;
+}
+
+.hero-content {
+  display: grid;
+  align-content: center;
+  min-height: 72vh;
+  padding-top: 64px;
+}
+
+.eyebrow {
+  margin: 0 0 12px;
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1,
+h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+h1 {
+  max-width: 760px;
+  margin-bottom: 24px;
+  font-size: clamp(3.6rem, 10vw, 7.7rem);
+}
+
+h2 {
+  margin-bottom: 0;
+  font-size: clamp(2.3rem, 5vw, 4.4rem);
+}
+
+h3 {
+  margin-bottom: 12px;
+  font-size: 1.35rem;
+}
+
+.hero-text {
+  max-width: 650px;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.button.primary {
+  color: #1e2b22;
+  background: var(--gold);
+}
+
+.button.secondary {
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.section {
+  padding: 88px clamp(20px, 4vw, 32px);
+}
+
+.intro {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(260px, 1.2fr);
+  gap: 36px;
+  align-items: start;
+}
+
+.intro p:last-child,
+.period-card p,
+.author-card p,
+footer p {
+  color: var(--muted);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 28px;
+  margin-bottom: 34px;
+}
+
+.timeline,
+.author-grid,
+.books {
+  display: grid;
+  gap: 18px;
+}
+
+.timeline {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.period-card,
+.author-card,
+.books article {
+  border: 1px solid rgba(23, 77, 61, 0.1);
+  border-radius: 28px;
+  background: var(--card);
+  box-shadow: var(--shadow);
+}
+
+.period-card {
+  padding: 24px;
+}
+
+.period-card span {
+  display: inline-flex;
+  margin-bottom: 18px;
+  color: var(--green-light);
+  font-weight: 800;
+}
+
+.highlight {
+  width: 100%;
+  max-width: none;
+  padding-inline: max(clamp(20px, 5vw, 72px), calc((100vw - 1120px) / 2));
+  background: #123d31;
+  color: #fff;
+}
+
+.author-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.author-card {
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: none;
+}
+
+.author-card p {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.books {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.books article {
+  display: grid;
+  min-height: 160px;
+  align-content: end;
+  padding: 24px;
+  background: linear-gradient(145deg, #ffffff, #fff2d2);
+}
+
+.books strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.books span {
+  margin-top: 10px;
+  color: var(--green-light);
+  font-weight: 700;
+}
+
+footer {
+  padding: 28px clamp(20px, 4vw, 32px) 56px;
+  text-align: center;
+}
+
+@media (max-width: 920px) {
+  .timeline,
+  .author-grid,
+  .books {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .intro {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    min-height: auto;
+    padding-bottom: 56px;
+  }
+
+  .nav,
+  .nav-links,
+  .hero-actions,
+  .section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .hero-content {
+    min-height: auto;
+  }
+
+  .timeline,
+  .author-grid,
+  .books {
+    grid-template-columns: 1fr;
+  }
+}
