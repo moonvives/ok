@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "start": "node scripts/serve.mjs",
-    "build": "rm -rf dist && mkdir -p dist/src && cp index.html dist/index.html && cp src/*.js src/*.css dist/src/",
+    "build": "node scripts/build.mjs",
     "test": "node --test tests/*.test.js",
-    "serve": "node scripts/serve.mjs"
+    "serve": "node scripts/serve.mjs",
+    "start:dist": "npm run build && ROOT=dist node scripts/serve.mjs",
+    "link": "node scripts/serve.mjs",
+    "offline": "node scripts/build.mjs"
   },
   "devDependencies": {}
 }
