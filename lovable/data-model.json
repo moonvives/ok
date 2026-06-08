@@ -1,0 +1,34 @@
+{
+  "appName": "Sara Fit 54",
+  "owner": "Sara Ruth",
+  "profile": {
+    "heightCm": 164,
+    "age": 23,
+    "sex": "Feminino",
+    "currentWeightKg": 73.3,
+    "targetWeightKg": 54,
+    "bodyFatPercent": 44,
+    "fatMassKg": 32.2,
+    "skeletalMuscleKg": 22.1,
+    "waistHipRatio": 0.94,
+    "visceralFatLevel": 17,
+    "bmrKcal": 1257,
+    "inbodyRecommendedKcal": 1797,
+    "inbodyDate": "03/01/2025"
+  },
+  "metricKeys": [
+    "sleepHours",
+    "restingHeartRate",
+    "hrvMs",
+    "steps",
+    "activeMinutes",
+    "caloriesConsumed",
+    "proteinG",
+    "stressLevel",
+    "menstrualPhase"
+  ],
+  "storage": {
+    "localStorageKeys": ["dailyChecks", "weightLogs", "syncedMetrics"],
+    "privacy": "single-user-local-first"
+  }
+}
