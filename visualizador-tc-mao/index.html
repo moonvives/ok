@@ -472,7 +472,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
         </div>
         <div class="insp-sec" id="secMeas">
           <h4>Medições <span class="chev">▾</span></h4>
-          <div class="content" id="measContent"><div class="empty-note" style="padding:8px">Nenhuma medição.<br>Use as ferramentas na barra superior.</div></div>
+          <div class="content" id="measContent"><div class="empty-note" style="padding:8px">Nenhuma medição.</div></div>
         </div>
         <div class="insp-sec" id="secSeries">
           <h4>Série <span class="chev">▾</span></h4>
@@ -683,6 +683,7 @@ async function loadAllFromDB(){
   APP.files=recs.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
   const meas=await idbGet("meta","measurements");
   APP.measurements = meas||{};
+  APP.examInfo = (await idbGet("meta","examInfo"))||null;
   buildHierarchy();
 }
 
@@ -943,6 +944,11 @@ function windowToImageData(frame, ww, wl, invert){
   const d=out.data;
   if(frame.color){
     d.set(frame.rgba);
+    if(frame.adjustable && !(ww===256&&wl===128)){
+      const W=Math.max(1,ww), lo=wl-0.5-(W-1)/2, span=W-1, lut=new Uint8ClampedArray(256);
+      for(let x=0;x<256;x++) lut[x]= x<=lo?0 : x>lo+span?255 : ((x-(wl-0.5))/span+0.5)*255;
+      for(let i=0;i<d.length;i+=4){ d[i]=lut[d[i]]; d[i+1]=lut[d[i+1]]; d[i+2]=lut[d[i+2]]; }
+    }
     if(invert){ for(let i=0;i<d.length;i+=4){ d[i]=255-d[i]; d[i+1]=255-d[i+1]; d[i+2]=255-d[i+2]; } }
     return out;
   }
@@ -980,6 +986,17 @@ const WINDOW_PRESETS=[
   {name:"Cérebro",ww:80,wl:40},
 ];
 
+const IMAGE_PRESETS=[{name:"Original",ww:256,wl:128},{name:"Mais contraste",ww:150,wl:128},{name:"Mais claro",ww:256,wl:85},{name:"Mais escuro",ww:256,wl:170}];
+function presetsFor(kind){ return kind==="image"?IMAGE_PRESETS:[{name:"Original",orig:true},...WINDOW_PRESETS]; }
+function applyPreset(p){
+  if(!p) return;
+  if(p.orig){ const f=APP.current.image, fr=APP.current.frame; if(f&&fr&&f.meta){ const w=suggestWindow(f.meta,fr); applyWindow(w.ww,w.wl); } return; }
+  applyWindow(p.ww,p.wl);
+}
+function renderPresets(kind){
+  const pg=$("#presetGrid"); if(!pg) return; pg.innerHTML="";
+  presetsFor(kind).forEach(p=>pg.append(el("button",{text:p.name,onclick:()=>applyPreset(p)})));
+}
 // desenha um frame (mono+janela OU cor) para um canvas offscreen e retorna-o
 function frameToCanvas(frame, ww, wl, invert){
   const c=document.createElement("canvas"); c.width=frame.width; c.height=frame.height;
@@ -1024,7 +1041,8 @@ function buildHierarchy(){
       const st=study("MIDIA-IMPORTADA","Imagens e mídia importadas","","");
       const grp=f.folder||"Imagens";
       const sk="img::"+grp;
-      if(!st.series.has(sk)) st.series.set(sk,{id:"S_"+hashStr(sk),uid:sk,number:0,desc:grp,modality:"IMG",kind:"image",instances:[]});
+      if(!st.series.has(sk)){ const desc=grp.split("/").filter(Boolean).pop()||"Imagens", nm=/(\d{2,})/.exec(desc);
+        st.series.set(sk,{id:"S_"+hashStr(sk),uid:sk,number:nm?parseInt(nm[1],10):0,desc,modality:"IMG",kind:"image",instances:[]}); }
       st.series.get(sk).instances.push(f);
     }
   }
@@ -1044,7 +1062,7 @@ function buildHierarchy(){
       }
       sArr.push(s);
     }
-    sArr.sort((a,b)=>(a.number||0)-(b.number||0));
+    sArr.sort((a,b)=>(a.number||0)-(b.number||0) || String(a.desc).localeCompare(String(b.desc),undefined,{numeric:true}));
     out.push({...st,series:sArr});
   }
   out.sort((a,b)=>(a.uid==="MIDIA-IMPORTADA"?1:0)-(b.uid==="MIDIA-IMPORTADA"?1:0));
@@ -1094,7 +1112,7 @@ function renderSeriesList(){
   }
   for(const st of APP.studies){
     const head=el("div",{class:"sb-head",style:"border-bottom:0;padding:10px 10px 4px"},
-      el("h3",{text: st.uid==="MIDIA-IMPORTADA" ? "Imagens" : (st.desc||"Estudo")+(st.date?" · "+fmtDicomDate(st.date):"") }));
+      el("h3",{text: st.uid==="MIDIA-IMPORTADA" ? imagesGroupLabel() : (st.desc||"Estudo")+(st.date?" · "+fmtDicomDate(st.date):"") }));
     box.append(head);
     for(const s of st.series){
       const card=el("div",{class:"series-card",onclick:()=>selectSeries(s)});
@@ -1102,12 +1120,12 @@ function renderSeriesList(){
       const img=el("img",{class:"thumb",alt:""});
       makeSeriesThumb(s).then(u=>{ if(u) img.src=u; });
       const badges=el("div",{class:"badges"});
-      badges.append(el("span",{class:"tag "+(s.kind==="dicom"?"dcm":s.kind==="image"?"img":""),text:s.kind==="dicom"?(s.modality||"DICOM"):"IMG"}));
+      badges.append(el("span",{class:"tag "+(s.kind==="dicom"?"dcm":s.kind==="image"?"img":""),text:seriesModality(s)}));
       badges.append(el("span",{class:"tag",text:s.frames.length+(s.frames.length===1?" img":" imgs")}));
       if(s.isVolume) badges.append(el("span",{class:"tag vol",text:"3D"}));
       card.append(img, el("div",{class:"meta"},
         el("div",{class:"t",text:s.desc||"Série"}),
-        el("div",{class:"s",text:(s.modality||"")+(s.number?(" · nº "+s.number):"")}),
+        el("div",{class:"s",text:seriesModality(s)+(s.number?(" · nº "+s.number):"")}),
         badges));
       box.append(card);
     }
@@ -1115,6 +1133,8 @@ function renderSeriesList(){
   // marca ativa
   if(APP.current.series){ const c=box.querySelector('[data-sid="'+APP.current.series.id+'"]'); if(c)c.classList.add("active"); }
 }
+function seriesModality(s){ return s.kind==="image"?((APP.examInfo&&APP.examInfo.modality)||"IMG"):(s.modality||"DICOM"); }
+function imagesGroupLabel(){ const i=APP.examInfo; return i&&i.title?[i.title,i.date].filter(Boolean).join(" · "):"Imagens"; }
 function fmtDicomDate(d){ if(/^\d{8}$/.test(d)) return d.slice(6,8)+"/"+d.slice(4,6)+"/"+d.slice(0,4); return d; }
 
 async function makeSeriesThumb(s){
@@ -1152,6 +1172,7 @@ async function selectSeries(s){
   $$("#seriesList .series-card").forEach(c=>c.classList.toggle("active",c.dataset.sid===s.id));
   setView("viewer");
   buildToolbar();
+  renderPresets(s.kind);
   renderSeriesMeta(s);
   await loadInstance(APP.current.index);   // loadInstance decide se mostra a imagem ou um aviso
 }
@@ -1190,8 +1211,12 @@ async function loadInstance(i){
   }else if(f.kind==="image"){
     try{ const blob=new Blob([buf],{type:f.type||"image/*"}); const bmp=await createImageBitmap(blob);
       if(tok!==APP.current.loadTok) return;
-      V.imgBitmap=bmp; const c=document.createElement("canvas"); c.width=V.imgBitmap.width; c.height=V.imgBitmap.height;
-      c.getContext("2d").drawImage(V.imgBitmap,0,0); V.frameCanvas=c;
+      V.imgBitmap=bmp; const c=document.createElement("canvas"); c.width=bmp.width; c.height=bmp.height;
+      const cx=c.getContext("2d"); cx.drawImage(bmp,0,0);
+      const frame={color:true,adjustable:true,width:bmp.width,height:bmp.height,rgba:cx.getImageData(0,0,bmp.width,bmp.height).data};
+      APP.current.frame=frame;
+      if(fresh){ APP.view.ww=256; APP.view.wl=128; syncWindowUI(); }
+      V.frameCanvas=frameToCanvas(frame,APP.view.ww,APP.view.wl,APP.view.invert);
     }catch(e){ showStageMsg("Imagem não exibível","Disponível para download em Arquivos do exame.");
       updateHUD(); syncSliceUI(); return; }
   }
@@ -1245,7 +1270,7 @@ function screenToImg(x,y){ const inv=V.matrix.inverse(); const p=inv.transformPo
 function updateHUD(){
   const f=APP.current.image, s=APP.current.series; if(!f){ $("#hudTL").innerHTML=$("#hudTR").innerHTML=$("#hudBL").innerHTML=$("#hudBR").innerHTML=""; return; }
   const m=f.meta||{};
-  $("#hudTL").innerHTML = s? (esc(s.desc||"Série")+"<br><span class='k'>"+esc(m.modality||f.kind.toUpperCase())+"</span>"):"";
+  $("#hudTL").innerHTML = s? (esc(s.desc||"Série")+"<br><span class='k'>"+esc(m.modality||seriesModality(s))+"</span>"):"";
   $("#hudTR").innerHTML = "<span class='k'>Img</span> "+(APP.current.index+1)+"/"+s.frames.length+
       (m.instanceNumber?("<br><span class='k'>nº</span> "+m.instanceNumber):"")+
       (m.numberOfFrames>1?("<br><span class='k'>quadro</span> "+((APP.current.frameNo||0)+1)+"/"+m.numberOfFrames):"");
@@ -1263,7 +1288,14 @@ function updateHUD(){
 
 /* ---------- inspector: metadados da imagem ---------- */
 function renderMeta(f){
-  const box=$("#metaContent"); if(!f||!f.meta){ box.innerHTML="<div class='empty-note' style='padding:8px'>Sem metadados DICOM para este item.</div>"; return; }
+  const box=$("#metaContent");
+  if(f&&!f.meta){
+    const fr=APP.current.frame, ext=(f.name.split(".").pop()||"").toUpperCase();
+    const rows=[["Arquivo",f.name],["Formato",ext==="JPG"?"JPEG":ext],["Dimensões",fr?(fr.width+" × "+fr.height):null],["Tamanho",fmtBytes(f.size)]];
+    box.innerHTML=""; for(const[k,v]of rows) if(v) box.append(el("div",{class:"kv"},el("span",{class:"k",text:k}),el("span",{class:"v",text:String(v)})));
+    return;
+  }
+  if(!f){ box.innerHTML=""; return; }
   const m=f.meta; const rows=[
     ["Modalidade",m.modality],["Sintaxe",m.transferSyntaxName],
     ["Dimensões",m.cols&&m.rows?(m.cols+" × "+m.rows):null],
@@ -1282,10 +1314,12 @@ function renderMeta(f){
 }
 function renderSeriesMeta(s){
   const box=$("#seriesMetaContent"); const f0=s.instances[0], m=f0.meta||{};
-  const rows=[["Descrição",s.desc],["Modalidade",s.modality],["Nº série",s.number||"—"],
-    ["Arquivos",s.instances.length],["Imagens / quadros",s.frames.length],["Volume 3D",s.isVolume?"sim (MPR/MIP disponível)":"não"],
-    ["Data",m.studyDate?fmtDicomDate(m.studyDate):"—"]];
-  box.innerHTML=""; for(const[k,v]of rows){ if(v==null)continue; box.append(el("div",{class:"kv"},el("span",{class:"k",text:k}),el("span",{class:"v",text:String(v)}))); }
+  const img=s.kind==="image", info=APP.examInfo||{};
+  const rows=[["Descrição",s.desc],["Modalidade",seriesModality(s)],["Nº série",s.number||null],
+    img?["Imagens",s.frames.length]:["Arquivos",s.instances.length], img?null:["Imagens / quadros",s.frames.length],
+    img?null:["Volume 3D",s.isVolume?"sim":"não"],
+    ["Data",m.studyDate?fmtDicomDate(m.studyDate):(info.date||null)]].filter(Boolean);
+  box.innerHTML=""; for(const[k,v]of rows){ if(v==null||v==="")continue; box.append(el("div",{class:"kv"},el("span",{class:"k",text:k}),el("span",{class:"v",text:String(v)}))); }
 }
 
 /* ---------- janela (window/level) UI ---------- */
@@ -1352,9 +1386,10 @@ function buildToolbar(){
   const g2=el("div",{class:"tool-group"});
   for(const[ic,lb,fn]of act) g2.append(el("button",{class:"tool",title:lb,html:ICON[ic],onclick:fn}));
   tb.append(g2, el("div",{class:"tool-sep"}));
-  const sel=el("select",{class:"mini",onchange:e=>{const p=WINDOW_PRESETS[e.target.value];if(p)applyWindow(p.ww,p.wl);}});
-  sel.append(el("option",{value:"",text:"Presets de janela…"}));
-  WINDOW_PRESETS.forEach((p,i)=>sel.append(el("option",{value:i,text:p.name+"  ("+p.ww+"/"+p.wl+")"})));
+  const kind=APP.current.series?APP.current.series.kind:"dicom", PS=presetsFor(kind);
+  const sel=el("select",{class:"mini",onchange:e=>{ applyPreset(PS[e.target.value]); e.target.value=""; }});
+  sel.append(el("option",{value:"",text:kind==="image"?"Brilho e contraste…":"Presets de janela…"}));
+  PS.forEach((p,i)=>sel.append(el("option",{value:i,text:p.orig?p.name:p.name+"  ("+p.ww+"/"+p.wl+")"})));
   tb.append(sel);
   tb.append(el("button",{class:"tool",title:"Limpar medições",html:ICON.trash+"<span>Limpar</span>",onclick:clearMeas}));
   tb.append(el("div",{style:"flex:1"}));
@@ -1447,7 +1482,7 @@ function drawROI(ctx,type,a,b){
 /* ---------- lista de medições no inspector ---------- */
 function renderMeasList(){
   const box=$("#measContent"); const list=getMeas();
-  if(!list.length){ box.innerHTML="<div class='empty-note' style='padding:8px'>Nenhuma medição.<br>Use as ferramentas na barra superior.</div>"; return; }
+  if(!list.length){ box.innerHTML="<div class='empty-note' style='padding:8px'>Nenhuma medição.</div>"; return; }
   box.innerHTML="";
   list.forEach((m,i)=>{
     let txt="";
@@ -1581,7 +1616,7 @@ function initControls(){
   $("#wlRange").addEventListener("input",e=>applyWindow(APP.view.ww,parseInt(e.target.value,10)));
   $$(".insp-sec > h4").forEach(h=>h.addEventListener("click",()=>h.parentElement.classList.toggle("closed")));
   // presets no inspector
-  const pg=$("#presetGrid"); WINDOW_PRESETS.forEach(p=>pg.append(el("button",{text:p.name,onclick:()=>applyWindow(p.ww,p.wl)})));
+  renderPresets("dicom");
 
   // teclado
   window.addEventListener("keydown",ev=>{
@@ -1739,9 +1774,9 @@ function updateTopStatus(){
 }
 // título do exame a partir dos próprios metadados DICOM
 function examHeading(){
-  const f=APP.files.find(isImageDicom); const m=f?f.meta:null;
-  const title=(m&&(m.studyDesc||m.seriesDesc))||"";
-  const date=m&&m.studyDate?fmtDicomDate(m.studyDate):"";
+  const f=APP.files.find(isImageDicom); const m=f?f.meta:null; const info=APP.examInfo||{};
+  const title=(m&&(m.studyDesc||m.seriesDesc))||info.title||"";
+  const date=m&&m.studyDate?fmtDicomDate(m.studyDate):(info.date||"");
   return {m,title,date,line:[title,date].filter(Boolean).join(" · ")};
 }
 // seções sem conteúdo ficam ocultas na navegação
@@ -1806,27 +1841,28 @@ function renderOverview(){
       el("button",{class:"btn primary",text:"Importar",onclick:()=>setView("import")})));
     return;
   }
-  const h=examHeading(), m=h.m||{};
+  const h=examHeading(), m=h.m||{}, info=APP.examInfo||{}, P=info.patient||{};
   p.append(el("h1",{text:h.title||"Tomografia computadorizada"}),
-    el("div",{class:"sub",text:[h.date,m.modality,m.bodyPart].filter(Boolean).join(" · ")}));
-
-  if(m.patientName||m.patientBirth||m.patientID){
-    const pat=el("div",{class:"panel-box",style:"margin-top:0;margin-bottom:16px"});
-    pat.append(el("h3",{text:"Paciente"}));
-    const rows=[["Nome",(m.patientName||"").replace(/\^/g," ").trim()],["Nascimento",m.patientBirth?fmtDicomDate(m.patientBirth):""],
-      ["Sexo",fmtSex(m.patientSex)],["Identificação",m.patientID]];
-    for(const[k,v]of rows) if(v) pat.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v",text:v})));
-    p.append(pat);
-  }
-  if(m.institution||m.referringPhysician||m.accession||m.manufacturer){
-    const ex=el("div",{class:"panel-box",style:"margin-top:0;margin-bottom:16px"});
-    ex.append(el("h3",{text:"Exame"}));
-    const rows=[["Instituição",m.institution],["Médico solicitante",m.referringPhysician],["Nº de acesso",m.accession],
-      ["Data e hora",[m.studyDate?fmtDicomDate(m.studyDate):"",fmtDicomTime(m.studyTime)].filter(Boolean).join(" ")],
-      ["Equipamento",[m.manufacturer,m.stationName].filter(Boolean).join(" · ")]];
-    for(const[k,v]of rows) if(v) ex.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v",text:v})));
-    p.append(ex);
-  }
+    el("div",{class:"sub",text:[h.date,m.modality||info.modality,m.bodyPart].filter(Boolean).join(" · ")}));
+  const panel=(title,rows)=>{
+    rows=rows.filter(r=>r[1]); if(!rows.length) return;
+    const box=el("div",{class:"panel-box",style:"margin-top:0;margin-bottom:16px"});
+    box.append(el("h3",{text:title}));
+    for(const[k,v]of rows) box.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v",text:v})));
+    p.append(box);
+  };
+  panel("Paciente",[
+    ["Nome",m.patientName?m.patientName.replace(/\^/g," ").trim():P.name],
+    ["Nascimento",m.patientBirth?fmtDicomDate(m.patientBirth):P.birth],
+    ["Idade",P.age],
+    ["Sexo",m.patientSex?fmtSex(m.patientSex):P.sex],
+    ["Identificação",m.patientID||P.id]]);
+  panel("Exame",[
+    ["Instituição",m.institution||info.institution],
+    ["Médico solicitante",m.referringPhysician||info.physician],
+    ["Nº de acesso",m.accession||info.accession],
+    ["Data e hora",m.studyDate?[fmtDicomDate(m.studyDate),fmtDicomTime(m.studyTime)].filter(Boolean).join(" "):[info.date,info.time].filter(Boolean).join(" ")],
+    ["Equipamento",[m.manufacturer,m.stationName].filter(Boolean).join(" · ")||info.equipment]]);
 
   const grid=el("div",{class:"cards"});
   const stat=(n,l)=>el("div",{class:"stat"},el("div",{class:"n",text:String(n)}),el("div",{class:"l",text:l}));
@@ -1843,7 +1879,7 @@ function renderOverview(){
       g.append(el("div",{class:"media-tile",onclick:()=>selectSeries(s)},
         el("div",{class:"mt-thumb"},img),
         el("div",{class:"mt-info"},el("div",{class:"t",text:s.desc||"Série"}),
-          el("div",{class:"s",text:[s.modality,s.frames.length+(s.frames.length===1?" imagem":" imagens"),s.isVolume?"3D":""].filter(Boolean).join(" · ")}))));
+          el("div",{class:"s",text:[seriesModality(s),s.frames.length+(s.frames.length===1?" imagem":" imagens"),s.isVolume?"3D":""].filter(Boolean).join(" · ")}))));
     }
     p.append(g);
   }
@@ -1973,7 +2009,7 @@ function renderArchive(){
   const tree=el("div",{class:"tree",style:"margin-top:16px"});
   for(const st of APP.studies){
     tree.append(el("div",{class:"tnode"},el("span",{class:"exp",text:"▸"}),
-      el("span",{class:"nm",style:"font-weight:700",text:(st.uid==="MIDIA-IMPORTADA"?"Imagens":(st.desc||"Estudo"))}),
+      el("span",{class:"nm",style:"font-weight:700",text:(st.uid==="MIDIA-IMPORTADA"?imagesGroupLabel():(st.desc||"Estudo"))}),
       el("span",{class:"sz"})));
     for(const s of st.series){
       tree.append(el("div",{class:"tnode depth1"},el("span",{class:"exp",text:"▾"}),
@@ -2175,6 +2211,7 @@ async function loadEmbedded(){
     showLoading("Carregando exame…",0);
     await importFiles(list,(d,t)=>showLoading("Carregando exame… "+d+" / "+t,d/t));
     // medições gravadas no arquivo: chaveadas pelo SHA-256 do arquivo de origem
+    if(EMBED.bundle&&EMBED.bundle.info){ APP.examInfo=EMBED.bundle.info; try{ await idbPut("meta",APP.examInfo,"examInfo"); }catch(e){} }
     const meas=(EMBED.bundle&&EMBED.bundle.meas)||{};
     const byHash=new Map(APP.files.map(f=>[f.hash,f.id]));
     for(const k in meas){ const [h,fr]=k.split("#"); const fid=byHash.get(h); if(fid) APP.measurements[fr?fid+"#"+fr:fid]=meas[k]; }
@@ -2186,7 +2223,7 @@ async function loadEmbedded(){
 }
 
 function suggestedName(){
-  const h=examHeading(); const base=[h.title||"Tomografia",h.m&&h.m.studyDate?h.m.studyDate:""].filter(Boolean).join("_");
+  const h=examHeading(); const base=[h.title||"Tomografia",h.m&&h.m.studyDate?h.m.studyDate:(h.date||"").replace(/\//g,"-")].filter(Boolean).join("_");
   return safeName(base)||"Tomografia";
 }
 
@@ -2199,7 +2236,7 @@ async function exportStandaloneSite(){
   const meas={};
   for(const k in APP.measurements){ const [fid,fr]=k.split("#"); const h=idToHash.get(fid);
     if(h&&APP.measurements[k]&&APP.measurements[k].length) meas[fr?h+"#"+fr:h]=APP.measurements[k]; }
-  const bundle={id:uid(),created:new Date().toISOString(),files:APP.files.length,meas};
+  const bundle={id:uid(),created:new Date().toISOString(),files:APP.files.length,meas,info:APP.examInfo||null};
   parts.push('\n<script type="application/json" id="exam-bundle">'+JSON.stringify(bundle).replace(/</g,"\\u003c")+"<\/script>\n");
   let i=0, total=0;
   for(const f of APP.files){
@@ -2304,7 +2341,7 @@ function renderExportPage(){
 async function wipeAll(){
   if(!confirm("Apagar TODOS os dados importados deste navegador? Faça o backup .zip antes. Esta ação não pode ser desfeita.")) return;
   await idbClear("files"); await idbClear("blobs"); await idbClear("meta");
-  APP.files=[];APP.studies=[];APP.measurements={};APP.current={series:null,index:0,image:null};APP.report=null;
+  APP.files=[];APP.studies=[];APP.measurements={};APP.examInfo=null;APP.current={series:null,index:0,image:null};APP.report=null;
   renderSeriesList();updateTopStatus();stopCine();V.frameCanvas=null;drawViewer();
   showStageMsg("Nenhuma imagem selecionada","");
   renderExportPage(); toast("Dados locais apagados.","ok");
