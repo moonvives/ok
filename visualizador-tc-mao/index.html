@@ -34,6 +34,7 @@
   --timeline:72px;
   --radius:8px;
   --shadow:0 8px 30px rgba(0,0,0,.45);
+  color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;margin:0}
@@ -299,6 +300,35 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 .modal-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:860px;width:100%;max-height:88vh;overflow:auto;box-shadow:var(--shadow)}
 .modal-card header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
 #btnSeries{display:none}
+/* volume 3D (VR) */
+.vr-wrap{flex:1;display:flex;min-height:0}
+.vr-stage{flex:1;position:relative;background:#000;min-width:0;min-height:0;touch-action:none;cursor:grab;user-select:none}
+.vr-stage:active{cursor:grabbing}
+.vr-stage canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.vr-stage .vr-ov{pointer-events:none}
+.vr-msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px;z-index:3;background:rgba(0,0,0,.55)}
+.vr-msg .progress{width:min(320px,70vw);margin:12px auto 0}
+.vr-side{width:262px;flex:0 0 auto;border-left:1px solid var(--border);overflow:auto;padding:12px 12px 18px;background:var(--surface)}
+.vr-side h5{margin:14px 0 6px;font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.vr-side h5:first-child{margin-top:2px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.seg.c3{grid-template-columns:1fr 1fr 1fr}
+.seg button{height:28px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:11px;padding:0 4px}
+.seg button:hover{border-color:var(--accent)}
+.seg button.on{background:var(--panel-2);border-color:var(--accent);color:#fff}
+.vr-row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:11px;color:var(--muted)}
+.vr-row input[type=range]{flex:1;min-width:0}
+.vr-row .val{font-family:var(--mono);color:var(--text);min-width:58px;text-align:right}
+.vr-ends{display:flex;justify-content:space-between;font-size:10px;color:var(--muted-2);margin-top:-2px}
+.vr-hint{margin-top:14px;font-size:10.5px;line-height:1.55;color:var(--muted-2)}
+.vr-top{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface)}
+.vr-top .ttl{font-size:15px;font-weight:650}
+@media (max-width:820px){
+  .vr-wrap{flex-direction:column}
+  .vr-stage{flex:1 1 55%}
+  .vr-side{width:auto;flex:0 1 45%;border-left:0;border-top:1px solid var(--border)}
+}
+.confirm-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
 /* telas até 1600px: ferramentas só com ícone (nome no tooltip) para caber tudo sem rolar */
 @media (max-width:1600px){ #toolbar .tool > span{display:none} }
 @media (max-width:820px){ #btnSeries{display:inline-flex} }
@@ -371,7 +401,8 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
       <button class="nav active" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="tip">Visão geral</span></button>
       <button class="nav" data-view="viewer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="3.4"/></svg><span class="tip">Visualizador</span></button>
       <button class="nav" data-view="mpr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18M9 3v18"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg><span class="tip">Multiplanar (MPR)</span></button>
-      <button class="nav" data-view="mip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg><span class="tip">Reconstrução 3D</span></button>
+      <button class="nav" data-view="mip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg><span class="tip">Projeção MIP</span></button>
+      <button class="nav" data-view="vr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/></svg><span class="tip">Volume 3D (VR)</span></button>
       <button class="nav" data-view="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11V6a2 2 0 0 1 4 0v5M5 11h11a2 2 0 0 1 2 2v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/></svg><span class="tip">Punho e mão</span></button>
       <div class="sep"></div>
       <button class="nav" data-view="media"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 9l5 3-5 3z"/></svg><span class="tip">Vídeos e imagens</span></button>
@@ -441,6 +472,8 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
       <div class="view" data-view="mpr" id="view-mpr"><div class="page" id="page-mpr"></div></div>
       <!-- VIEW: MIP/3D -->
       <div class="view" data-view="mip" id="view-mip"><div class="page" id="page-mip"></div></div>
+      <!-- VIEW: VOLUME 3D (VR) -->
+      <div class="view" data-view="vr" id="view-vr"><div class="page" id="page-vr" style="padding:0;display:flex;flex-direction:column;overflow:hidden"></div></div>
       <!-- VIEW: POLEGAR -->
       <div class="view" data-view="thumb" id="view-thumb"><div class="page" id="page-thumb" style="padding:0;display:flex;flex-direction:column"></div></div>
       <!-- VIEW: MÍDIA -->
@@ -486,6 +519,7 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;bac
 <!-- entrada de arquivos -->
 <input type="file" id="fileInput" multiple class="hidden">
 <input type="file" id="folderInput" webkitdirectory directory multiple class="hidden">
+<input type="file" id="pdfInput" accept="application/pdf,.pdf" multiple class="hidden">
 
 <div id="toasts"></div>
 <div id="modal"><div class="modal-card"><header><h3 id="modalTitle"></h3><button class="btn ghost" id="modalClose">Fechar</button></header><div class="mc-body" id="modalBody"></div></div></div>
@@ -553,7 +587,8 @@ function openModal(title,node){
   $("#modal").classList.add("open");
 }
 function closeModal(){ $("#modal").classList.remove("open"); $("#modalBody").innerHTML="";
-  if(APP._modalUrl){ URL.revokeObjectURL(APP._modalUrl); APP._modalUrl=null; } }
+  if(APP._modalUrl){ URL.revokeObjectURL(APP._modalUrl); APP._modalUrl=null; }
+  const c=APP._modalCancel; APP._modalCancel=null; if(c) c(); }
 
 /* ---------- navegação entre seções ---------- */
 function setView(name){
@@ -570,6 +605,7 @@ function setView(name){
   if(name==="export") renderExportPage();
   if(name==="mpr") renderMPR();
   if(name==="mip") renderMIP();
+  if(name==="vr") renderVR(); else vrPause();
   if(name==="thumb") renderThumb();
   if(window.innerWidth<=820) $("#sidebar").classList.remove("open");
 }
@@ -675,15 +711,21 @@ async function saveAsset(rec, buf){
   await idbPut("files", rec);
   if(buf) await idbPut("blobs", buf, rec.id);
 }
-async function getBuf(id){ return await idbGet("blobs", id); }
+async function getBuf(id){
+  const r=REMOTE.index.get(id);
+  if(r) return r.remote?remoteBytes(r.remote):null;
+  const sh=SHARED.index.get(id);
+  if(sh) return sharedBytes(sh);
+  return await idbGet("blobs", id);
+}
 
 /* carrega tudo do banco para a memória no início */
 async function loadAllFromDB(){
-  const recs=await idbGetAll("files");
-  APP.files=recs.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  const recs=(await idbGetAll("files")).sort((a,b)=>(a.name||"").localeCompare(b.name||""));
   const meas=await idbGet("meta","measurements");
   APP.measurements = meas||{};
-  APP.examInfo = (await idbGet("meta","examInfo"))||null;
+  if(REMOTE.on){ APP.files=APP.files.concat(recs); }   // exame publicado + o que foi adicionado neste dispositivo
+  else{ APP.files=recs; APP.examInfo=(await idbGet("meta","examInfo"))||null; }
   buildHierarchy();
 }
 
@@ -878,6 +920,9 @@ function parseDicom(buffer){
     accession:(S(0x0008,0x0050)||"").trim(),
     studyTime:(S(0x0008,0x0030)||"").trim(),
     stationName:(S(0x0008,0x1010)||"").trim(),
+    model:(S(0x0008,0x1090)||"").trim(),
+    kernel:(S(0x0018,0x1210)||"").trim(), kvp:N(0x0018,0x0060), tubeCurrent:N(0x0018,0x1151),
+    protocol:(S(0x0018,0x1030)||"").trim(), patientPosition:(S(0x0018,0x5100)||"").trim(),
     pixel, pixelOffset:pixel.off, pixelLength:pixel.len,
   };
   if(meta.highBit==null) meta.highBit=meta.bitsStored-1;
@@ -916,7 +961,7 @@ function extractModality(meta, buffer, frameIndex=0){
       else{ const pl=w*h; r=dv.getUint8(base+i); g=dv.getUint8(base+pl+i); b=dv.getUint8(base+2*pl+i); }
       rgba[i*4]=r; rgba[i*4+1]=g; rgba[i*4+2]=b; rgba[i*4+3]=255;
     }
-    return {color:true,width:w,height:h,rgba};
+    return {color:true,adjustable:true,width:w,height:h,rgba};
   }
 
   if(bitsAllocated!==8 && bitsAllocated!==16) return null; // 1 ou 32 bits: fora do escopo desta edição
@@ -968,6 +1013,7 @@ function windowToImageData(frame, ww, wl, invert){
 
 // janela sugerida (WC/WW do DICOM, senão a partir dos dados)
 function suggestWindow(meta,frame){
+  if(frame && frame.color) return {ww:256, wl:128};   // cor: brilho e contraste originais
   if(meta && meta.windowWidth && meta.windowCenter!=null)
     return {ww:meta.windowWidth, wl:meta.windowCenter};
   if(frame && !frame.color && isFinite(frame.min) && isFinite(frame.max)){
@@ -987,6 +1033,7 @@ const WINDOW_PRESETS=[
 ];
 
 const IMAGE_PRESETS=[{name:"Original",ww:256,wl:128},{name:"Mais contraste",ww:150,wl:128},{name:"Mais claro",ww:256,wl:85},{name:"Mais escuro",ww:256,wl:170}];
+function presetKind(s){ return s&&(s.kind==="image"||(s.instances[0]&&s.instances[0].meta&&s.instances[0].meta.samplesPerPixel>1))?"image":"dicom"; }
 function presetsFor(kind){ return kind==="image"?IMAGE_PRESETS:[{name:"Original",orig:true},...WINDOW_PRESETS]; }
 function applyPreset(p){
   if(!p) return;
@@ -996,6 +1043,30 @@ function applyPreset(p){
 function renderPresets(kind){
   const pg=$("#presetGrid"); if(!pg) return; pg.innerHTML="";
   presetsFor(kind).forEach(p=>pg.append(el("button",{text:p.name,onclick:()=>applyPreset(p)})));
+}
+// o aparelho comporta um canvas deste tamanho? (iPhone/iPad: ~16,7 milhões de pixels)
+const CANVAS_OK=new Map();
+function canvasFits(w,h){
+  const k=w+"x"+h; if(CANVAS_OK.has(k)) return CANVAS_OK.get(k);
+  let ok=false;
+  try{ const c=document.createElement("canvas"); c.width=w; c.height=h; const x=c.getContext("2d");
+    if(x){ x.fillStyle="#fff"; x.fillRect(w-1,h-1,1,1); ok=x.getImageData(w-1,h-1,1,1).data[3]===255; }
+    c.width=c.height=0; }catch(e){ ok=false; }
+  CANVAS_OK.set(k,ok); return ok;
+}
+// reduz um quadro (média de área) até caber no canvas do aparelho; medidas em mm acompanham a escala
+function shrinkFrame(frame){
+  let f=1; while(!canvasFits(Math.ceil(frame.width/f),Math.ceil(frame.height/f))&&f<16) f*=1.25;
+  if(f===1) return frame;
+  const W=frame.width,H=frame.height,w=Math.max(1,Math.floor(W/f)),h=Math.max(1,Math.floor(H/f)),sx=W/w,sy=H/h;
+  const chans=frame.color?4:1, src=frame.color?frame.rgba:frame.values;
+  const out=frame.color?new Uint8ClampedArray(w*h*4):new Float32Array(w*h);
+  for(let y=0;y<h;y++){ const y0=Math.floor(y*sy), y1=Math.max(y0+1,Math.floor((y+1)*sy));
+    for(let x=0;x<w;x++){ const x0=Math.floor(x*sx), x1=Math.max(x0+1,Math.floor((x+1)*sx)); const n=(y1-y0)*(x1-x0);
+      for(let c=0;c<chans;c++){ let s=0; for(let yy=y0;yy<y1;yy++){ const b=(yy*W)*chans; for(let xx=x0;xx<x1;xx++) s+=src[b+xx*chans+c]; } out[(y*w+x)*chans+c]=s/n; } } }
+  const r={...frame,width:w,height:h,scaledFrom:[W,H]};
+  if(frame.color) r.rgba=out; else r.values=out;
+  return r;
 }
 // desenha um frame (mono+janela OU cor) para um canvas offscreen e retorna-o
 function frameToCanvas(frame, ww, wl, invert){
@@ -1020,7 +1091,7 @@ function kindFromFile(name,mime){
 }
 
 function buildHierarchy(){
-  APP.volumes={};   // a composição das séries pode ter mudado (nova importação): descarta volumes em cache
+  const oldVol=APP.volumes||{}; APP.volumes={};   // volumes só sobrevivem se a série continuar idêntica
   const studies=new Map();
   function study(uid,desc,date,mod){
     if(!studies.has(uid)) studies.set(uid,{uid,desc:desc||"",date:date||"",modality:mod||"",series:new Map()});
@@ -1067,6 +1138,10 @@ function buildHierarchy(){
   }
   out.sort((a,b)=>(a.uid==="MIDIA-IMPORTADA"?1:0)-(b.uid==="MIDIA-IMPORTADA"?1:0));
   APP.studies=out;
+  for(const st of out) for(const s of st.series){
+    const v=oldVol[s.id];
+    if(v&&v.series&&v.series.instances.length===s.instances.length&&v.series.instances.every((f,i)=>f===s.instances[i])){ v.series=s; APP.volumes[s.id]=v; }
+  }
 }
 
 function sortDicomInstances(s){
@@ -1134,15 +1209,15 @@ function renderSeriesList(){
   if(APP.current.series){ const c=box.querySelector('[data-sid="'+APP.current.series.id+'"]'); if(c)c.classList.add("active"); }
 }
 function seriesModality(s){ return s.kind==="image"?((APP.examInfo&&APP.examInfo.modality)||"IMG"):(s.modality||"DICOM"); }
-function imagesGroupLabel(){ const i=APP.examInfo; return i&&i.title?[i.title,i.date].filter(Boolean).join(" · "):"Imagens"; }
+function imagesGroupLabel(){ if(REMOTE.on) return "Imagens do CD (JPEG)"; const i=APP.examInfo; return i&&i.title?[i.title,i.date].filter(Boolean).join(" · "):"Imagens"; }
 function fmtDicomDate(d){ if(/^\d{8}$/.test(d)) return d.slice(6,8)+"/"+d.slice(4,6)+"/"+d.slice(0,4); return d; }
 
 async function makeSeriesThumb(s){
   try{
     const mid=s.instances[Math.floor(s.instances.length/2)];
+    if(mid.remote&&(mid.remote.thumb||(mid.remote.s&&mid.remote.s.thumb))) return mid.remote.thumb||mid.remote.s.thumb;
     if(s.kind==="image"){ return await thumbForImageFile(mid); }
-    const buf=await getBuf(mid.id); if(!buf) return null;
-    const frame=extractModality(mid.meta,buf,0); if(!frame) return null;
+    const frame=await frameFor(mid,0); if(!frame) return null;
     const win=suggestWindow(mid.meta,frame);
     const c=frameToCanvas(frame,win.ww,win.wl,false);
     const t=downscale(c,96); return t.toDataURL("image/jpeg",0.7);
@@ -1172,7 +1247,7 @@ async function selectSeries(s){
   $$("#seriesList .series-card").forEach(c=>c.classList.toggle("active",c.dataset.sid===s.id));
   setView("viewer");
   buildToolbar();
-  renderPresets(s.kind);
+  renderPresets(presetKind(s));
   renderSeriesMeta(s);
   await loadInstance(APP.current.index);   // loadInstance decide se mostra a imagem ou um aviso
 }
@@ -1183,7 +1258,8 @@ async function loadInstance(i){
   const {f,k}=s.frames[i];
   const fresh=APP.current.fresh; APP.current.fresh=false;
   const tok=APP.current.loadTok=(APP.current.loadTok||0)+1;
-  const buf=await getBuf(f.id);
+  const buf=f.kind==="dicom"?null:await getBuf(f.id);
+  const pre=(f.kind==="dicom"&&!f.meta.isVideo&&!f.meta.compressed)?await frameFor(f,k):null;
   if(tok!==APP.current.loadTok) return;   // rolagem rápida: uma leitura mais nova já assumiu
   APP.current.image=f; APP.current.frameNo=k;
   V.imgBitmap=null; V.frameCanvas=null; APP.current.frame=null;
@@ -1199,7 +1275,7 @@ async function loadInstance(i){
       updateHUD(); syncSliceUI(); renderMeta(f);
       return;
     }
-    const frame=extractModality(f.meta,buf,k);
+    const frame=pre&&!canvasFits(pre.width,pre.height)?shrinkFrame(pre):pre;
     if(!frame){ showStageMsg("Imagem não exibível","Disponível para download em Arquivos do exame."); updateHUD(); syncSliceUI(); return; }
     APP.current.frame=frame;
     if(fresh){ // janela sugerida só ao abrir a série; depois, respeita o ajuste do usuário
@@ -1211,9 +1287,11 @@ async function loadInstance(i){
   }else if(f.kind==="image"){
     try{ const blob=new Blob([buf],{type:f.type||"image/*"}); const bmp=await createImageBitmap(blob);
       if(tok!==APP.current.loadTok) return;
-      V.imgBitmap=bmp; const c=document.createElement("canvas"); c.width=bmp.width; c.height=bmp.height;
-      const cx=c.getContext("2d"); cx.drawImage(bmp,0,0);
-      const frame={color:true,adjustable:true,width:bmp.width,height:bmp.height,rgba:cx.getImageData(0,0,bmp.width,bmp.height).data};
+      V.imgBitmap=bmp; let bw=bmp.width, bh=bmp.height;
+      while(!canvasFits(bw,bh)&&bw>64){ bw=Math.floor(bw/1.25); bh=Math.floor(bh/1.25); }
+      const c=document.createElement("canvas"); c.width=bw; c.height=bh;
+      const cx=c.getContext("2d"); cx.drawImage(bmp,0,0,bw,bh);
+      const frame={color:true,adjustable:true,width:bw,height:bh,rgba:cx.getImageData(0,0,bw,bh).data};
       APP.current.frame=frame;
       if(fresh){ APP.view.ww=256; APP.view.wl=128; syncWindowUI(); }
       V.frameCanvas=frameToCanvas(frame,APP.view.ww,APP.view.wl,APP.view.invert);
@@ -1306,8 +1384,10 @@ function renderMeta(f){
     ["Esp. de corte",m.sliceThickness!=null?m.sliceThickness+" mm":"—"],
     ["Posição (IPP)",m.ipp?m.ipp.map(x=>x.toFixed(1)).join(", "):"—"],
     ["Instância nº",m.instanceNumber],
+    ["Kernel",m.kernel],["kVp",m.kvp],["mA",m.tubeCurrent],
+    ["Protocolo",m.protocol],["Posição",m.patientPosition],
     ["Série UID",m.seriesUID],["SOP UID",m.sopUID],
-    ["Fabricante",m.manufacturer||"—"],["Região",m.bodyPart||"—"],
+    ["Equipamento",[m.manufacturer,m.model].filter(Boolean).join(" ")||"—"],["Região",m.bodyPart||"—"],
   ];
   box.innerHTML="";
   for(const [k,v] of rows){ if(v==null||v==="")continue; box.append(el("div",{class:"kv"},el("span",{class:"k",text:k}),el("span",{class:"v",text:String(v)}))); }
@@ -1364,6 +1444,7 @@ const ICON={
   reset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.3 2.6L3 8M3 3v5h5"/></svg>',
   trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
   full:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  cam:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
 };
 const TOOLS=[
   {id:"wwwl",label:"Janela"},{id:"pan",label:"Mover"},{id:"zoom",label:"Zoom"},
@@ -1386,14 +1467,34 @@ function buildToolbar(){
   const g2=el("div",{class:"tool-group"});
   for(const[ic,lb,fn]of act) g2.append(el("button",{class:"tool",title:lb,html:ICON[ic],onclick:fn}));
   tb.append(g2, el("div",{class:"tool-sep"}));
-  const kind=APP.current.series?APP.current.series.kind:"dicom", PS=presetsFor(kind);
+  const kind=presetKind(APP.current.series), PS=presetsFor(kind);
   const sel=el("select",{class:"mini",onchange:e=>{ applyPreset(PS[e.target.value]); e.target.value=""; }});
   sel.append(el("option",{value:"",text:kind==="image"?"Brilho e contraste…":"Presets de janela…"}));
   PS.forEach((p,i)=>sel.append(el("option",{value:i,text:p.orig?p.name:p.name+"  ("+p.ww+"/"+p.wl+")"})));
   tb.append(sel);
   tb.append(el("button",{class:"tool",title:"Limpar medições",html:ICON.trash+"<span>Limpar</span>",onclick:clearMeas}));
+  tb.append(el("button",{class:"tool",title:"Salvar imagem (PNG)",html:ICON.cam+"<span>Salvar imagem</span>",onclick:saveViewerPNG}));
   tb.append(el("div",{style:"flex:1"}));
   tb.append(el("button",{class:"tool",title:"Tela cheia",html:ICON.full,onclick:toggleFull}));
+}
+// imagem como está na tela: janela, zoom, medições e os textos dos quatro cantos
+async function saveViewerPNG(){
+  if(!V.frameCanvas){ toast("Nenhuma imagem em exibição.","warn"); return; }
+  const a=$("#mainCanvas"), b=$("#overlayCanvas"), dpr=a.width/Math.max(1,a.clientWidth);
+  const c=document.createElement("canvas"); c.width=a.width; c.height=a.height; const x=c.getContext("2d");
+  x.fillStyle="#000"; x.fillRect(0,0,c.width,c.height); x.drawImage(a,0,0); x.drawImage(b,0,0);
+  drawHudText(x,c.width,c.height,dpr,{tl:$("#hudTL").innerText,tr:$("#hudTR").innerText,bl:$("#hudBL").innerText,br:$("#hudBR").innerText});
+  const blob=await new Promise(r=>c.toBlob(r,"image/png"));
+  const s=APP.current.series;
+  await saveFile(suggestedName()+"_"+safeName(s?(s.desc||"serie"):"imagem")+"_"+(APP.current.index+1)+".png",blob);
+}
+function drawHudText(x,w,h,dpr,t){
+  const fs=Math.round(11*dpr), lh=Math.round(15*dpr), m=Math.round(9*dpr);
+  x.font=fs+"px ui-monospace,Menlo,Consolas,monospace"; x.fillStyle="#cfe0f2"; x.shadowColor="#000"; x.shadowBlur=3*dpr;
+  const put=(txt,ax,top)=>{ const L=String(txt||"").split("\n").filter(s=>s.trim()); x.textAlign=ax;
+    L.forEach((s,i)=>{ const y=top?m+fs+i*lh:h-m-(L.length-1-i)*lh; x.fillText(s.trim(),ax==="left"?m:w-m,y); }); };
+  put(t.tl,"left",true); put(t.tr,"right",true); put(t.bl,"left",false); put(t.br,"right",false);
+  x.shadowBlur=0;
 }
 function setTool(id){ APP.tool=id; $$("#toolbar .tool[data-tool]").forEach(b=>b.classList.toggle("active",b.dataset.tool===id)); V.draft=null; drawOverlay(); }
 function toggleFull(){ const s=$("#stage"); if(!document.fullscreenElement){ (s.requestFullscreen||s.webkitRequestFullscreen||(()=>{})).call(s); } else document.exitFullscreen&&document.exitFullscreen(); }
@@ -1406,7 +1507,9 @@ async function persistMeas(){ try{ await idbPut("meta",APP.measurements,"measure
 function clearMeas(){ const id=measKey(); if(!id)return; APP.measurements[id]=[]; persistMeas(); drawOverlay(); renderMeasList(); }
 function addMeas(mo){ getMeas().push(mo); persistMeas(); drawOverlay(); renderMeasList(); }
 
-function pxMM(){ const m=APP.current.image&&APP.current.image.meta; if(m&&m.pixelSpacing&&m.pixelSpacing.length>=2) return {row:m.pixelSpacing[0],col:m.pixelSpacing[1]}; return null; }
+function pxMM(){ const m=APP.current.image&&APP.current.image.meta; if(!(m&&m.pixelSpacing&&m.pixelSpacing.length>=2)) return null;
+  const fr=APP.current.frame, kx=fr&&fr.scaledFrom?fr.scaledFrom[0]/fr.width:1, ky=fr&&fr.scaledFrom?fr.scaledFrom[1]/fr.height:1;
+  return {row:m.pixelSpacing[0]*ky,col:m.pixelSpacing[1]*kx}; }
 function lengthLabel(p1,p2){
   const mm=pxMM(); const dx=p2.x-p1.x, dy=p2.y-p1.y;
   if(mm){ const d=Math.sqrt((dx*mm.col)**2+(dy*mm.row)**2); return d.toFixed(1)+" mm"; }
@@ -1651,7 +1754,7 @@ function uid(){ try{ if(crypto.randomUUID) return crypto.randomUUID(); }catch(e)
 async function importFiles(fileList, progressCb){
   if(IMPORTING){ toast("Importação já em andamento…","warn"); return; }
   IMPORTING=true;
-  const report={discovered:0, imported:0, duplicates:0, failed:0, dicom:0, images:0, videos:0, pdfs:0, others:0, compressedSeries:0, zips:0, bytes:0, items:[]};
+  const report={discovered:0, imported:0, duplicates:0, failed:0, dicom:0, images:0, videos:0, pdfs:0, others:0, compressedSeries:0, zips:0, bytes:0, shared:0, items:[]};
   // pacotes .zip (como os baixados do portal) são abertos aqui mesmo, sem descompactar antes
   const files=[];
   for(const f of Array.from(fileList)){
@@ -1675,6 +1778,16 @@ async function importFiles(fileList, progressCb){
       const hash=await sha256Hex(buf);
       if(known.has(hash)){ report.duplicates++; report.items.push({name:file.name,status:"duplicado"}); done++; progressCb&&progressCb(done,files.length,file.name); continue; }
       known.add(hash);
+
+      // exame publicado: laudo, PDFs, imagens e vídeos vão para o armazenamento do site
+      const st=REMOTE.on&&SHARED.canWrite&&buf.byteLength<=SHARE_MAX?shareType(file,kind):null;
+      if(st){
+        try{ await shareUpload(file.name,buf,st,kind,hash);
+          report.shared++; report.imported++; report.bytes+=file.size; report[kind==="pdf"?"pdfs":kind==="image"?"images":"videos"]++;
+          report.items.push({name:file.name,status:"importado",kind,size:file.size,where:"site"});
+          done++; progressCb&&progressCb(done,files.length,file.name); continue;
+        }catch(e){ report.shareFailed=(report.shareFailed||0)+1; }   // segue e guarda neste dispositivo
+      }
 
       const rec={ id:uid(), name:file.name, folder, path:relPath, size:file.size, type:file.type||"",
         kind, hash, hashAlgo:"SHA-256", addedAt:new Date().toISOString(), meta:null, sourceZip:file._zip||null };
@@ -1783,10 +1896,10 @@ function examHeading(){
 function updateNav(){
   const all=APP.studies.flatMap(st=>st.series);
   const show={
-    mpr: all.some(s=>s.isVolume), mip: all.some(s=>s.isVolume),
+    mpr: all.some(s=>s.isVolume), mip: all.some(s=>s.isVolume), vr: all.some(s=>s.isVolume),
     thumb: all.some(s=>s.kind==="dicom"&&!s.instances[0].meta.compressed),
     media: APP.files.some(f=>f.kind==="video"||f.kind==="image"||(isImageDicom(f)&&f.meta.isVideo)),
-    reports: APP.files.some(f=>f.kind==="pdf"),
+    reports: REMOTE.on||APP.files.some(f=>f.kind==="pdf"),
   };
   for(const k in show){ const b=$('#rail .nav[data-view="'+k+'"]'); if(b) b.style.display=show[k]?"":"none"; }
 }
@@ -1862,15 +1975,20 @@ function renderOverview(){
     ["Médico solicitante",m.referringPhysician||info.physician],
     ["Nº de acesso",m.accession||info.accession],
     ["Data e hora",m.studyDate?[fmtDicomDate(m.studyDate),fmtDicomTime(m.studyTime)].filter(Boolean).join(" "):[info.date,info.time].filter(Boolean).join(" ")],
-    ["Equipamento",[m.manufacturer,m.stationName].filter(Boolean).join(" · ")||info.equipment]]);
+    ["Equipamento",[m.manufacturer,m.model].filter(Boolean).join(" ")||info.equipment],
+    ["Protocolo",info.protocol],["Posição",info.position],
+    ["Laudo",!c.pdfs&&reportDue()?"Previsão de entrega: "+reportDue():""]]);
 
   const grid=el("div",{class:"cards"});
   const stat=(n,l)=>el("div",{class:"stat"},el("div",{class:"n",text:String(n)}),el("div",{class:"l",text:l}));
-  grid.append(stat(c.series,"Séries"),stat(c.dicom+c.images,"Imagens"),stat(c.videos,"Vídeos"),stat(c.pdfs,"Documentos"));
+  if(REMOTE.on){ const dser=APP.studies.flatMap(st=>st.series).filter(s=>s.kind==="dicom");
+    grid.append(stat(dser.length,"Séries"),stat(c.dicom,"Imagens DICOM"),stat(APP.files.filter(f=>f.remote&&f.kind==="image").length,"Imagens JPEG do CD"),stat(c.videos,"Vídeos"),stat(c.pdfs,"Documentos")); }
+  else grid.append(stat(c.series,"Séries"),stat(c.dicom+c.images,"Imagens"),stat(c.videos,"Vídeos"),stat(c.pdfs,"Documentos"));
   p.append(grid);
 
-  // séries: miniaturas clicáveis que abrem no visualizador
-  const series=APP.studies.flatMap(st=>st.series);
+  // séries: miniaturas clicáveis que abrem no visualizador (no exame publicado, as séries DICOM;
+  // as imagens JPEG do CD ficam em Vídeos e imagens)
+  const series=APP.studies.flatMap(st=>st.series).filter(s=>!REMOTE.on||s.kind==="dicom");
   if(series.length){
     p.append(el("h3",{style:"margin:26px 0 12px;font-size:13.5px",text:"Séries"}));
     const g=el("div",{class:"media-grid"});
@@ -1926,10 +2044,14 @@ async function thumbForVideoFile(f){
   }catch(e){ return null; }
 }
 function docCard(f){
-  return el("div",{class:"stat",style:"cursor:pointer",onclick:()=>openDoc(f)},
+  const where=REMOTE.on?(f.shared?"No site":"Neste dispositivo"):"";
+  const card=el("div",{class:"stat",style:"cursor:pointer;position:relative",onclick:()=>openDoc(f)},
     el("div",{html:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffb46b" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></svg>'}),
-    el("div",{class:"l",style:"margin-top:8px;font-weight:600;color:var(--text)",text:f.name}),
-    el("div",{class:"l2",text:fmtBytes(f.size)}));
+    el("div",{class:"l",style:"margin-top:8px;font-weight:600;color:var(--text);overflow-wrap:anywhere",text:f.name}),
+    el("div",{class:"l2",text:[fmtBytes(f.size),where,f.addedAt?new Date(f.addedAt).toLocaleDateString("pt-BR"):""].filter(Boolean).join(" · ")}));
+  if(f.shared&&SHARED.canWrite) card.append(el("button",{class:"btn ghost",style:"position:absolute;top:8px;right:8px;height:26px;padding:0 9px;font-size:11px",
+    text:"Remover",onclick:e=>{ e.stopPropagation(); removeShared(f); }}));
+  return card;
 }
 
 function renderMedia(){
@@ -1938,6 +2060,17 @@ function renderMedia(){
   const imgs=APP.files.filter(f=>f.kind==="image");
   p.innerHTML=""; p.append(el("h1",{style:"margin-bottom:18px",text:"Vídeos e imagens"}));
   if(!vids.length&&!imgs.length){ p.append(el("div",{class:"muted-c",text:"Nenhum vídeo ou imagem."})); return; }
+  if(imgs.length>60){
+    const series=APP.studies.flatMap(st=>st.series).filter(x=>x.kind==="image");
+    if(vids.length){ p.append(el("h3",{style:"margin:6px 0 12px;font-size:13.5px",text:"Vídeos"}));
+      const gv=el("div",{class:"media-grid",style:"margin-bottom:24px"}); for(const f of vids) gv.append(mediaTile(f)); p.append(gv); }
+    p.append(el("h3",{style:"margin:6px 0 12px;font-size:13.5px",text:"Imagens"}));
+    const g=el("div",{class:"media-grid"});
+    for(const sr of series){ const img=el("img",{alt:""}); makeSeriesThumb(sr).then(u=>{ if(u) img.src=u; });
+      g.append(el("div",{class:"media-tile",onclick:()=>selectSeries(sr)},el("div",{class:"mt-thumb"},img),
+        el("div",{class:"mt-info"},el("div",{class:"t",text:sr.desc}),el("div",{class:"s",text:sr.frames.length+" imagens"})))); }
+    p.append(g); return;
+  }
   for(const [title,list] of [["Vídeos",vids],["Imagens",imgs]]){
     if(!list.length) continue;
     p.append(el("h3",{style:"margin:6px 0 12px;font-size:13.5px",text:title}));
@@ -1984,23 +2117,63 @@ async function openMedia(f){
   openModal(f.name, el("div",{},v,bar));
 }
 
+function reportDue(){ const m=document.querySelector('meta[name="exam-report-due"]'); return m?m.getAttribute("content"):""; }
 function renderReports(){
   const p=$("#page-reports");
   const docs=APP.files.filter(f=>f.kind==="pdf");
-  p.innerHTML=""; p.append(el("h1",{style:"margin-bottom:18px",text:"Laudo e documentos"}));
-  if(!docs.length){ p.append(el("div",{class:"muted-c",text:"Nenhum documento."})); return; }
+  p.innerHTML="";
+  p.append(el("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px"},
+    el("h1",{style:"margin:0",text:"Laudo e documentos"}),
+    el("button",{class:"btn primary",text:docs.length?"Adicionar documento (PDF)":"Adicionar laudo (PDF)",onclick:()=>$("#pdfInput").click()})));
+  if(!docs.length){
+    const info=APP.examInfo||{}, box=el("div",{class:"panel-box",style:"margin-top:0"});
+    box.append(el("h3",{text:"Laudo"}));
+    for(const [k,v] of [["Situação",REMOTE.on?"Não incluído no CD do exame":"Nenhum laudo adicionado"],["Previsão de entrega",reportDue()],
+        ["Instituição",info.institution],["Exame",[info.title,info.date].filter(Boolean).join(" · ")],["Nº de acesso",info.accession]])
+      if(v) box.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v",text:v})));
+    p.append(box); return;
+  }
   const grid=el("div",{class:"cards"}); for(const f of docs) grid.append(docCard(f)); p.append(grid);
 }
+// PDF: no claude.ai o leitor embutido do navegador não abre em quadros protegidos, então as
+// páginas são desenhadas pelo pdf.js; fora dele (arquivo local, sem internet), pelo leitor do navegador.
+const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/";
+const SCRIPTS=new Map();
+function loadScriptOnce(src){
+  if(SCRIPTS.has(src)) return SCRIPTS.get(src);
+  const pr=new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=src; s.onload=res; s.onerror=()=>rej(new Error("script")); document.head.append(s); });
+  pr.catch(()=>SCRIPTS.delete(src)); SCRIPTS.set(src,pr); return pr;
+}
+async function renderPdfPages(buf,box){
+  await loadScriptOnce(PDFJS+"pdf.min.js");
+  await loadScriptOnce(PDFJS+"pdf.worker.min.js");   // roda nesta página (globalThis.pdfjsWorker)
+  const lib=window.pdfjsLib; lib.GlobalWorkerOptions.workerSrc=PDFJS+"pdf.worker.min.js";
+  const doc=await lib.getDocument({data:new Uint8Array(buf.slice(0)),isEvalSupported:false}).promise;
+  box.innerHTML="";
+  for(let i=1;i<=doc.numPages;i++){
+    const pg=await doc.getPage(i), vp=pg.getViewport({scale:Math.min(2.2,(window.devicePixelRatio||1)*1.4)});
+    const c=el("canvas",{style:"width:100%;height:auto;display:block;margin:0 auto 12px;background:#fff;border-radius:4px"}); c.width=vp.width; c.height=vp.height;
+    box.append(c); await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+  }
+}
 async function openDoc(f){
-  const buf=await getBuf(f.id); const url=URL.createObjectURL(new Blob([buf],{type:"application/pdf"})); APP._modalUrl=url;
-  const wrap=el("div",{},el("iframe",{src:url,style:"width:100%;height:72vh;border:0;border-radius:8px;background:#fff"}),
-    el("div",{style:"margin-top:12px"},el("button",{class:"btn primary",text:"Baixar",onclick:()=>downloadBytes(f.name,buf,"application/pdf")})));
-  openModal(f.name,wrap);
+  const buf=await getBuf(f.id);
+  const actions=el("div",{style:"margin-top:12px"},el("button",{class:"btn primary",text:"Baixar",onclick:()=>saveFile(f.name,buf,"application/pdf")}));
+  if(inArtifact()){
+    const box=el("div",{style:"max-height:72vh;overflow:auto;border-radius:8px;background:#2a3340;padding:10px"},el("div",{class:"muted-c",style:"padding:30px;text-align:center",text:"Abrindo documento…"}));
+    openModal(f.name,el("div",{},box,actions));
+    try{ await renderPdfPages(buf,box); }
+    catch(e){ box.innerHTML=""; box.append(el("div",{class:"muted-c",style:"padding:30px;text-align:center",text:"Não foi possível exibir o documento aqui. Use Baixar para abri-lo."})); }
+    return;
+  }
+  const url=URL.createObjectURL(new Blob([buf],{type:"application/pdf"})); APP._modalUrl=url;
+  openModal(f.name,el("div",{},el("iframe",{src:url,style:"width:100%;height:72vh;border:0;border-radius:8px;background:#fff"}),actions));
 }
 
 function renderArchive(){
   const p=$("#page-archive");
   p.innerHTML="";
+  if(REMOTE.on){ renderArchiveRemote(p); return; }
   const head=el("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"},
     el("h1",{style:"margin:0",text:"Arquivos do exame"}),
     APP.files.length?el("button",{class:"btn primary",text:"Baixar tudo (.zip)",onclick:exportAll}):null);
@@ -2044,42 +2217,37 @@ function emptyState(title,desc,btn,view){
 }
 function wireEmptyBtns(){ $$("[data-go]").forEach(b=>b.onclick=()=>setView(b.dataset.go)); }
 function emptyNode(t,d){ const n=el("div",{class:"panel-box",style:"text-align:center;color:var(--muted)"}); n.innerHTML="<p style='font-size:14px;color:var(--text);margin:6px 0'>"+esc(t)+"</p><p style='margin:0'>"+esc(d)+"</p>"; return n; }
-function downloadBytes(name,buf,mime){
-  const blob=buf instanceof Blob?buf:new Blob([buf],{type:mime||"application/octet-stream"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name||"arquivo"; document.body.append(a); a.click();
-  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},60000); // folga para downloads grandes
-}
 
 /* =====================================================================
    GERADOR DE ZIP (método STORE) + EXPORTAÇÃO / BACKUP
    ===================================================================== */
-function buildZipBlob(entries){
-  const enc=new TextEncoder();
-  const chunks=[]; const central=[]; let offset=0;
-  function u16(n){ const b=new Uint8Array(2); new DataView(b.buffer).setUint16(0,n,true); return b; }
-  function u32(n){ const b=new Uint8Array(4); new DataView(b.buffer).setUint32(0,n>>>0,true); return b; }
-  // ZIP clássico (sem ZIP64): no máximo 65535 entradas e ~4 GB
-  const total=entries.reduce((a,e)=>a+(e.bytes.length||e.bytes.byteLength||0),0);
-  if(entries.length>65535 || total>0xFFFFFFFF-50*1024*1024)
-    throw new Error("Backup grande demais para um único .zip ("+fmtBytes(total)+"). Exporte por série.");
+// ZIP (método STORE). Cada arquivo vira um Blob assim que é lido: a memória do JavaScript
+// guarda um arquivo por vez, mesmo em exportações de centenas de MB.
+// entries: [{name, bytes?:Uint8Array, get?:async()=>Uint8Array, check?:async(u8)=>void}]
+async function zipFromEntries(entries,progress){
+  const enc=new TextEncoder(), parts=[], central=[]; let offset=0;
+  const u16=n=>{ const b=new Uint8Array(2); new DataView(b.buffer).setUint16(0,n,true); return b; };
+  const u32=n=>{ const b=new Uint8Array(4); new DataView(b.buffer).setUint32(0,n>>>0,true); return b; };
+  if(entries.length>65535) throw new Error("Arquivos demais para um único .zip. Exporte por série.");
   const now=new Date();
   const dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
   const dosDate=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
-  for(const e of entries){
-    const nameBytes=enc.encode(e.name);
-    const data=e.bytes instanceof Uint8Array?e.bytes:new Uint8Array(e.bytes);
-    const crc=crc32(data);
-    const local=[u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(dosTime),u16(dosDate),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),nameBytes];
-    for(const c of local) chunks.push(c); chunks.push(data);
-    const localSize=30+nameBytes.length+data.length;
+  for(let i=0;i<entries.length;i++){
+    const e=entries[i];
+    let data=e.bytes||await e.get(); if(!(data instanceof Uint8Array)) data=new Uint8Array(data);
+    if(e.check) await e.check(data);
+    const nameBytes=enc.encode(e.name), crc=crc32(data);
+    if(offset+30+nameBytes.length+data.length>0xFFFFFFFF-50*1024*1024) throw new Error("Exportação acima de 4 GB. Exporte por série.");
+    parts.push(new Blob([u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(dosTime),u16(dosDate),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),nameBytes,data]));
     central.push([u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(dosTime),u16(dosDate),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),nameBytes]);
-    offset+=localSize;
+    offset+=30+nameBytes.length+data.length;
+    if(progress) progress(i+1,entries.length);
+    if(i%8===7) await new Promise(r=>setTimeout(r,0));   // mantém a página respondendo
   }
-  const cdStart=offset; const cdParts=[];
+  const cdStart=offset, cdParts=[];
   for(const c of central){ for(const part of c){ cdParts.push(part); offset+=part.length; } }
-  const cdSize=offset-cdStart;
-  const eocd=[u32(0x06054b50),u16(0),u16(0),u16(central.length),u16(central.length),u32(cdSize),u32(cdStart),u16(0)];
-  return new Blob([...chunks,...cdParts,...eocd],{type:"application/zip"});
+  const eocd=[u32(0x06054b50),u16(0),u16(0),u16(central.length),u16(central.length),u32(offset-cdStart),u32(cdStart),u16(0)];
+  return new Blob([...parts,...cdParts,...eocd],{type:"application/zip"});
 }
 
 // arquivos que não pertencem a nenhuma série visível (vídeos, PDFs, DICOMDIR, outros)
@@ -2153,9 +2321,9 @@ async function exportEntries(fileSubset, zipName){
     "Gerado em "+new Date().toLocaleString("pt-BR")+"\n"
   )});
   let blob;
-  try{ blob=buildZipBlob(entries); }
+  try{ blob=await zipFromEntries(entries); }
   catch(e){ toast(esc(e.message),"err",9000); return; }
-  downloadBytes((zipName||("ARQUIVO_TC_"+nowStamp()))+".zip", blob);
+  await saveFile((zipName||("ARQUIVO_TC_"+nowStamp()))+".zip", blob);
   toast("Backup gerado ("+fmtBytes(blob.size)+", "+(entries.length-3)+" arquivo(s) original(is)).","ok",5000);
 }
 function exportAll(){ if(!APP.files.length){toast("Nada para exportar.","warn");return;} exportEntries(null,"ARQUIVO_TC_completo_"+nowStamp()); }
@@ -2180,7 +2348,7 @@ function captureEmbedded(){
   }
   const b=document.getElementById("exam-bundle");
   if(b){ try{ EMBED.bundle=JSON.parse(b.textContent); }catch(e){} b.remove(); }
-  APP_SOURCE="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
+  APP_SOURCE="<!DOC"+"TYPE html>\n"+document.documentElement.outerHTML;
 }
 
 function bufToB64(buf){
@@ -2253,6 +2421,265 @@ async function exportStandaloneSite(){
   toast("Arquivo gerado: "+fmtBytes(blob.size)+".","ok",5000);
 }
 
+/* =====================================================================
+   EXAME PUBLICADO (modo site)
+   Ativado por <meta name="exam-manifest" content="...">. Os arquivos ORIGINAIS do CD
+   (DICOM, DICOMDIR, JPEG) são publicados byte a byte dentro de pacotes gzip; o
+   manifest.json traz o índice (pacote, deslocamento, tamanho, SHA-256) e os metadados
+   que montam as séries antes de baixar qualquer pixel.
+   ===================================================================== */
+const REMOTE={on:false,manifest:null,index:new Map(),packs:new Map(),bytes:0};
+function packBudget(){ let coarse=false; try{ coarse=matchMedia("(pointer:coarse)").matches; }catch(e){} return (coarse?160:420)*1024*1024; }
+async function gunzipBytes(u8){
+  if(u8[0]!==0x1f||u8[1]!==0x8b) return u8;   // entregue já descomprimido
+  if(typeof DecompressionStream==="undefined") throw new Error("Este navegador não abre os dados do exame. Use Chrome, Edge, Safari ou Firefox atualizados.");
+  return new Uint8Array(await new Response(new Blob([u8]).stream().pipeThrough(new DecompressionStream("gzip"))).arrayBuffer());
+}
+function remotePack(i){
+  let e=REMOTE.packs.get(i);
+  if(e){ REMOTE.packs.delete(i); REMOTE.packs.set(i,e); return e.pr; }   // mais recente por último (LRU)
+  const P=REMOTE.manifest.packs[i];
+  e={size:P.rawSize,pr:null};
+  e.pr=fetch(P.file).then(r=>{ if(!r.ok) throw new Error("HTTP "+r.status+" em "+P.file); return r.arrayBuffer(); })
+    .then(b=>gunzipBytes(new Uint8Array(b)))
+    .then(u=>{ if(u.length!==P.rawSize) throw new Error("Pacote incompleto: "+P.file); return u; });
+  e.pr.catch(()=>{ if(REMOTE.packs.get(i)===e){ REMOTE.packs.delete(i); REMOTE.bytes-=e.size; } });
+  REMOTE.packs.set(i,e); REMOTE.bytes+=e.size;
+  for(const [k,v] of REMOTE.packs){   // libera os pacotes usados há mais tempo
+    if(REMOTE.bytes<=packBudget()||REMOTE.packs.size<=2) break;
+    if(k===i) continue; REMOTE.packs.delete(k); REMOTE.bytes-=v.size;
+  }
+  return e.pr;
+}
+// bytes originais de um arquivo do CD (cópia própria, pronta para ler ou salvar)
+async function remoteBytes(r){ const u=await remotePack(r.pack); return u.slice(r.off,r.off+r.len).buffer; }
+
+// quadro de qualquer instância DICOM. No exame publicado o cabeçalho completo é lido do
+// próprio arquivo na primeira vez; os metadados do manifest servem só para montar a lista.
+async function frameFor(f,k=0){
+  const buf=await getBuf(f.id); if(!buf) return null;
+  if(f.provisional){ try{ f.meta=parseDicom(buf); }catch(e){} f.provisional=false; }
+  return extractModality(f.meta,buf,k);
+}
+function yyyymmdd(d){ const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(d||""); return m?m[3]+m[2]+m[1]:(d||""); }
+function fmtAge(a){ const m=/^(\d{3})([YMWD])$/.exec(a||""); if(!m) return a||""; const n=parseInt(m[1],10);
+  return n+" "+({Y:n===1?"ano":"anos",M:n===1?"mês":"meses",W:"semanas",D:"dias"})[m[2]]; }
+const POSITIONS={HFP:"Cabeça primeiro, decúbito ventral (HFP)",HFS:"Cabeça primeiro, decúbito dorsal (HFS)",FFP:"Pés primeiro, decúbito ventral (FFP)",
+  FFS:"Pés primeiro, decúbito dorsal (FFS)",HFDR:"Cabeça primeiro, decúbito lateral direito (HFDR)",HFDL:"Cabeça primeiro, decúbito lateral esquerdo (HFDL)",
+  FFDR:"Pés primeiro, decúbito lateral direito (FFDR)",FFDL:"Pés primeiro, decúbito lateral esquerdo (FFDL)"};
+function fmtPosition(p){ return POSITIONS[p]||p||""; }
+
+async function loadRemoteExam(url){
+  const r=await fetch(url); if(!r.ok) throw new Error("HTTP "+r.status+" em "+url);
+  const M=await r.json(); REMOTE.manifest=M;
+  const st=M.study, P=st.patient||{};
+  APP.examInfo={title:st.description,date:st.date,time:st.time?st.time.slice(0,2)+":"+st.time.slice(2,4):"",modality:"CT",
+    patient:{name:P.name,birth:P.birth,age:fmtAge(P.age),sex:P.sex==="F"?"Feminino":P.sex==="M"?"Masculino":P.sex,id:P.id},
+    institution:st.institution,physician:st.referringPhysician||"Não informado",accession:st.accession,
+    equipment:[st.manufacturer,st.model].filter(Boolean).join(" "),protocol:st.protocol,position:fmtPosition(st.patientPosition),studyID:st.id};
+  const files=[];
+  for(const s of M.series){
+    s.instances.forEach((it,idx)=>{
+      const rgb=it.spp>1;
+      files.push({id:s.key+"_"+idx,name:it.file.split("/").pop(),folder:"exam/"+s.folder,path:"exam/"+it.file,size:it.len,hash:it.sha256,
+        type:"application/dicom",kind:"dicom",provisional:true,remote:{pack:it.pack,off:it.off,len:it.len,thumb:s.thumb},
+        meta:{rows:it.rows,cols:it.cols,bitsAllocated:it.bits,bitsStored:it.bits,pixelRep:0,samplesPerPixel:it.spp,
+          photometric:it.photometric||"MONOCHROME2",planar:0,numberOfFrames:it.frames||1,rescaleSlope:1,rescaleIntercept:0,
+          windowCenter:rgb?null:it.wc,windowWidth:rgb?null:it.ww,pixelSpacing:it.ps||s.pixelSpacing,sliceThickness:s.sliceThickness,
+          ipp:it.ipp,iop:s.iop,instanceNumber:it.instance,sliceLocation:it.sliceLocation,studyUID:st.uid,seriesUID:s.uid,sopUID:it.sop,
+          modality:s.modality,seriesNumber:s.number,seriesDesc:s.description,studyDesc:st.description,studyDate:yyyymmdd(st.date),
+          studyTime:st.time,bodyPart:st.bodyPart,patientName:P.name,patientID:P.id,patientBirth:yyyymmdd(P.birth),patientSex:P.sex,
+          manufacturer:st.manufacturer,model:st.model,stationName:st.station,institution:st.institution,referringPhysician:st.referringPhysician,
+          accession:st.accession,kernel:s.kernel,protocol:st.protocol,patientPosition:st.patientPosition,
+          transferSyntaxName:"",compressed:false,isVideo:false,pixel:{present:true}}});
+    });
+  }
+  for(const e of M.extra||[]){
+    const name=e.file.split("/").pop(), rem={pack:e.pack,off:e.off,len:e.len};
+    if(e.kind==="jpeg"){
+      const se=M.series[parseInt(String(e.group).replace(/\D/g,""),10)-1];   // s0001.. seguem a ordem do DICOMDIR
+      rem.thumb=se&&se.thumb;
+      files.push({id:"j_"+e.file,name,folder:"Imagens do CD/JPEG · Série "+(se?se.number+(se.description?" - "+se.description:""):e.group),
+        path:"exam/"+e.file,size:e.len,hash:e.sha256,type:"image/jpeg",kind:"image",remote:rem});
+    }else{
+      files.push({id:"x_"+e.file,name,folder:"exam/"+e.file.split("/").slice(0,-1).join("/"),path:"exam/"+e.file,size:e.len,hash:e.sha256,type:"",
+        kind:e.kind==="dicomdir"?"dicom":"other",remote:rem,
+        meta:e.kind==="dicomdir"?{pixel:{present:false},isVideo:false,compressed:false,transferSyntaxName:"Explicit VR Little Endian",modality:""}:null});
+    }
+  }
+  APP.files=files; REMOTE.index=new Map(files.map(f=>[f.id,f]));
+  buildHierarchy();
+}
+
+/* ---------- documentos guardados no site (laudo, PDFs, imagens, vídeos) ----------
+   Dentro do claude.ai o arquivo fica no armazenamento do site e o índice no banco de
+   dados do site: quem pode editar o site adiciona e remove, os demais visualizam. */
+const SHARED={index:new Map(),canWrite:false,ready:false,db:null,assets:null};
+const SHARE_MAX=20*1024*1024;
+const SHARE_TYPES={pdf:"application/pdf",png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",gif:"image/gif",webp:"image/webp",mp4:"video/mp4",webm:"video/webm"};
+function inArtifact(){ try{ return !!(window.claude&&typeof window.claude.use==="function"); }catch(e){ return false; } }
+function capUse(name){ if(!inArtifact()) return Promise.resolve(null); try{ return Promise.resolve(window.claude.use(name)).catch(()=>null); }catch(e){ return Promise.resolve(null); } }
+function shareType(file,kind){
+  if(!(kind==="pdf"||kind==="image"||kind==="video")) return null;
+  const ext=(String(file.name||"").split(".").pop()||"").toLowerCase(), t=SHARE_TYPES[ext]||null;
+  return t&&(!file.type||Object.values(SHARE_TYPES).includes(file.type))?t:null;
+}
+async function initShared(){
+  if(!REMOTE.on||!inArtifact()) return;
+  const db=await capUse("db"); if(!db) return;
+  SHARED.db=db;
+  SHARED.assets=await capUse("assets");   // só quem pode editar o site recebe
+  let edit=!!SHARED.assets;
+  const user=await capUse("user");
+  if(edit&&user){ try{ if((await user.canEdit())===false) edit=false; }catch(e){} }
+  SHARED.canWrite=edit;
+  try{ db.collection("documentos").onSnapshot(snap=>applySharedDocs(snap.docs.map(d=>({id:d.id,...(d.data()||{})}))),
+    err=>console.warn("documentos:",err&&err.code)); }
+  catch(e){ console.warn(e); }
+  SHARED.ready=true; refreshPagesAfterData();
+}
+function applySharedDocs(list){
+  APP.files=APP.files.filter(f=>!f.shared); SHARED.index=new Map();
+  list.sort((a,b)=>String(a.addedAt||"").localeCompare(String(b.addedAt||"")));
+  for(const d of list){
+    if(!d.assetId||!d.name) continue;
+    const rec={id:"sh_"+d.id,name:d.name,path:"documentos/"+d.name,size:d.size||0,hash:d.sha256||"",type:d.type||"",
+      kind:d.kind||kindFromFile(d.name,d.type),folder:"Documentos adicionados",addedAt:d.addedAt||"",shared:{docId:d.id,assetId:d.assetId}};
+    APP.files.push(rec); SHARED.index.set(rec.id,rec);
+  }
+  buildHierarchy(); renderSeriesList(); updateTopStatus(); refreshPagesAfterData();
+}
+async function sharedBytes(rec){ const r=await fetch("/_blob/"+rec.shared.assetId); if(!r.ok) throw new Error("HTTP "+r.status); return r.arrayBuffer(); }
+async function shareUpload(name,buf,type,kind,hash){
+  const up=await SHARED.assets.upload(new Blob([buf],{type}),{type});
+  await SHARED.db.collection("documentos").doc(hash.slice(0,40)).set({name,kind,type,size:buf.byteLength,sha256:hash,assetId:up.id,addedAt:new Date().toISOString()});
+}
+async function removeShared(rec){
+  if(!(await confirmInPage("Remover documento","Remover "+rec.name+" do site? Ele deixa de aparecer para todos que abrem o exame.","Remover"))) return;
+  try{ await SHARED.db.collection("documentos").doc(rec.shared.docId).delete();
+    try{ await SHARED.assets.delete(rec.shared.assetId); }catch(e){}
+    toast("Documento removido.","ok"); }
+  catch(e){ toast("Não foi possível remover o documento.","err",6000); }
+}
+function currentView(){ const v=$("#center .view.active"); return v?v.dataset.view:""; }
+function refreshPagesAfterData(){
+  const v=currentView();
+  if(v==="import"&&IMPORTING) return;
+  if(["overview","reports","media","archive","import","export"].includes(v)) setView(v);
+}
+// confirmação dentro da página (o visualizador do claude.ai não exibe confirm())
+function confirmInPage(title,text,okLabel){
+  return new Promise(res=>{
+    APP._modalCancel=()=>res(false);
+    openModal(title,el("div",{},el("p",{style:"margin:0;line-height:1.6;font-size:13px;max-width:56ch",text}),
+      el("div",{class:"confirm-actions"},
+        el("button",{class:"btn",text:"Cancelar",onclick:()=>closeModal()}),
+        el("button",{class:"btn danger",text:okLabel||"Confirmar",onclick:()=>{ APP._modalCancel=null; closeModal(); res(true); }}))));
+  });
+}
+
+/* ---------- salvar arquivos ----------
+   No claude.ai o arquivo é entregue pelo recurso de downloads (com confirmação de quem
+   está vendo); fora dele, pelo download comum do navegador. Tipos que o recurso não
+   aceita (DICOM, DICOMDIR...) seguem dentro de um .zip, sem alteração dos bytes. */
+const DL_OK=/\.(gif|png|jpe?g|webp|mp4|webm|mov|txt|json|md|docx|pptx|epub|csv|ttf|html|svg|pdf|xlsx|zip)$/i;
+async function saveFile(name,data,mime){
+  name=name||"arquivo";
+  let blob=data instanceof Blob?data:new Blob([data],{type:mime||"application/octet-stream"});
+  if(inArtifact()){
+    const dl=await capUse("downloads");
+    if(!dl){ toast("Salvar arquivos não está disponível nesta visualização.","warn",6000); return false; }
+    if(!DL_OK.test(name)){
+      blob=await zipFromEntries([{name,bytes:new Uint8Array(await blob.arrayBuffer())}]);
+      name=(/\.[^.\/]+$/.test(name)?name.replace(/\.[^.\/]+$/,""):name)+".zip";
+    }
+    try{ await dl.save({filename:name,data:blob}); return true; }
+    catch(e){ const c=e&&e.code; if(c==="declined") return false;
+      toast(c==="too_large"?"Arquivo grande demais para este aparelho. Exporte por série.":c==="rate_limited"?"Conclua a confirmação anterior e tente de novo.":"Não foi possível salvar o arquivo.","warn",7000);
+      return false; }
+  }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.append(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},60000);   // folga para downloads grandes
+  return true;
+}
+function downloadBytes(name,buf,mime){ return saveFile(name,buf,mime); }
+
+/* ---------- exportação do exame publicado ---------- */
+function cdRootName(){ const st=(REMOTE.manifest&&REMOTE.manifest.study)||{}; return safeName([st.description||"Exame",(st.date||"").replace(/\//g,"-")].filter(Boolean).join("_")); }
+// arquivos do CD em .zip, com a mesma estrutura de pastas do CD e conferência SHA-256 de cada arquivo
+async function exportCD(files,name){
+  const root=cdRootName(), list=files.filter(f=>f.remote).sort((a,b)=>a.path.localeCompare(b.path)), sums=[];
+  if(!list.length) return;
+  const entries=list.map(f=>{ const rel=f.path.replace(/^exam\//,"");
+    return {name:root+"/"+rel, get:async()=>new Uint8Array(await getBuf(f.id)),
+      check:async d=>{ const h=await sha256Hex(d.buffer); if(h!==f.hash) throw new Error("Falha de integridade em "+rel+"."); sums.push(h+"  "+rel); }}; });
+  entries.push({name:root+"/SHA256SUMS.txt",get:async()=>new TextEncoder().encode(sums.join("\n")+"\n")});
+  showLoading("Preparando "+name+".zip…",0);
+  try{
+    const blob=await zipFromEntries(entries,(d,t)=>showLoading("Preparando "+name+".zip… "+d+" / "+t,d/t));
+    hideLoading(); await saveFile(name+".zip",blob);
+  }catch(e){ hideLoading(); toast(esc(e.message||String(e)),"err",9000); }
+}
+async function exportInventoryCSV(){
+  const M=REMOTE.manifest, q=s=>'"'+String(s).replace(/"/g,'""')+'"';
+  const lines=["caminho,tamanho_bytes,sha256,no_site"].concat((M.inventory||[]).map(x=>[q(x.path),x.size,x.sha256,x.site?"sim":"nao"].join(",")));
+  await saveFile(cdRootName()+"_inventario_SHA256.csv","﻿"+lines.join("\r\n")+"\r\n","text/csv");
+}
+async function exportOfflineViewer(){
+  const m=document.querySelector('meta[name="exam-offline-viewer"]'); if(!m) return;
+  try{ const r=await fetch(m.getAttribute("content")); if(!r.ok) throw new Error("HTTP "+r.status);
+    await saveFile("Visualizador_Tomografia.html",await r.blob(),"text/html"); }
+  catch(e){ toast("Não foi possível obter o visualizador.","err",6000); }
+}
+
+/* ---------- PÁGINA: Arquivos do exame (publicado) ---------- */
+function renderArchiveRemote(p){
+  const M=REMOTE.manifest, inv=M.inventory||[], D=M.dicomdir||{}, C=D.counts||{};
+  const head=el("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px"},
+    el("h1",{style:"margin:0",text:"Arquivos do exame"}),
+    el("div",{style:"display:flex;gap:8px;flex-wrap:wrap"},
+      el("button",{class:"btn",text:"Verificar integridade (SHA-256)",onclick:()=>{ setView("import"); verifyIntegrity(); }}),
+      el("button",{class:"btn primary",text:"Exportar",onclick:()=>setView("export")})));
+  p.append(head);
+  const rowsBox=(title,rows)=>{ const b=el("div",{class:"panel-box",style:"margin-top:0;margin-bottom:14px"}); if(title) b.append(el("h3",{text:title}));
+    for(const [k,v] of rows) if(v!=null&&v!=="") b.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v",text:String(v)}))); return b; };
+  const total=inv.reduce((a,x)=>a+x.size,0), onSite=inv.filter(x=>x.site), siteBytes=onSite.reduce((a,x)=>a+x.size,0);
+  const dicomN=M.series.reduce((a,s)=>a+s.count,0), jpgN=(M.extra||[]).filter(e=>e.kind==="jpeg").length;
+  p.append(rowsBox("",[["Arquivos no CD",inv.length+" · "+fmtBytes(total)],["Arquivos do exame no site",onSite.length+" · "+fmtBytes(siteBytes)],
+    ["Imagens no índice do CD (DICOMDIR)",C.IMAGE],["Imagens DICOM",dicomN],["Imagens JPEG do CD",jpgN]]));
+  // índice do CD
+  const ts=D.transferSyntax, tsName=ts&&TS[ts]?TS[ts].name:ts;
+  const dd=rowsBox("Índice do CD (DICOMDIR)",[["Paciente (ID)",D.patient&&D.patient.id],
+    ["Estudo",D.study&&[D.study.description,D.study.date,fmtDicomTime(D.study.time)].filter(Boolean).join(" · ")],
+    ["Nº de acesso",D.study&&D.study.accession],["ID do estudo",D.study&&D.study.id],["Sintaxe de transferência",tsName],
+    ["Registros",["PATIENT","STUDY","SERIES","IMAGE"].filter(k=>C[k]!=null).map(k=>k+" "+C[k]).join(" · ")]]);
+  const wrap=el("div",{style:"overflow-x:auto;margin-top:10px"}), tb=el("table",{style:"width:100%;border-collapse:collapse;font-size:12px;font-variant-numeric:tabular-nums"});
+  const th=t=>el("th",{style:"text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--muted);font-weight:600;white-space:nowrap",text:t});
+  const td=(t,mono)=>el("td",{style:"padding:6px 8px;border-bottom:1px solid var(--border-soft);white-space:nowrap"+(mono?";font-family:var(--mono)":""),text:String(t)});
+  tb.append(el("tr",{},th("Série"),th("Modalidade"),th("Descrição"),th("Imagens"),th("Pasta")));
+  for(const s of D.series||[]) tb.append(el("tr",{},td(s.number,true),td(s.modality),td(s.description||"—"),td(s.images,true),td(s.folder,true)));
+  wrap.append(tb); dd.append(wrap); p.append(dd);
+  // inventário completo, por pasta
+  const seriesOf={}; for(const s of M.series) seriesOf["exam/"+s.folder]="Série "+s.number+(s.description?" - "+s.description:"");
+  const groupOf=x=>{ const parts=x.path.split("/"), dir=parts.slice(0,-1).join("/"); if(seriesOf[dir]) return dir;
+    if(parts[0]==="exam"&&parts[1]==="jpeg") return "exam/jpeg"; if(parts[0]==="ddv") return "ddv"; return dir||"(raiz)"; };
+  const label=g=>seriesOf[g]?(seriesOf[g]+"  ·  "+g):g==="exam/jpeg"?"Imagens JPEG do CD  ·  "+g:g==="ddv"?"Programa visualizador do CD para Windows  ·  ddv":g==="exam"?"Índice e controle do CD  ·  exam":g;
+  const groups=new Map(); for(const x of inv){ const g=groupOf(x); if(!groups.has(g)) groups.set(g,[]); groups.get(g).push(x); }
+  const keys=[...groups.keys()].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+  for(const g of keys){
+    const list=groups.get(g), inSite=list.every(x=>x.site), det=el("details",{class:"panel-box",style:"margin-top:10px"});
+    det.append(el("summary",{style:"cursor:pointer;font-weight:600",text:label(g)+"  —  "+list.length+" arquivo(s), "+fmtBytes(list.reduce((a,x)=>a+x.size,0))+(inSite?"":"  ·  não incluído no site")}));
+    const tree=el("div",{class:"tree",style:"margin-top:10px"});
+    for(const x of list){
+      const rec=x.site?APP.files.find(f=>f.path===x.path):null;
+      tree.append(el("div",{class:"tnode"},el("span",{class:"nm",title:x.sha256,text:x.path.split("/").slice(g==="(raiz)"?0:g.split("/").length).join("/")}),
+        el("span",{class:"sz",text:fmtBytes(x.size)}),el("span",{class:"sz",style:"font-family:var(--mono)",text:x.sha256.slice(0,12)}),
+        rec?el("span",{class:"dl",text:"baixar",onclick:async()=>{ const b=await getBuf(rec.id); saveFile(rec.name,b,rec.type); }}):null));
+    }
+    det.append(tree); p.append(det);
+  }
+}
+
 /* ---------- PÁGINA: Importar / Integridade ---------- */
 function renderImportPage(){
   const p=$("#page-import"); p.innerHTML="";
@@ -2277,6 +2704,7 @@ function renderImportPage(){
     const rows=[["Pacotes .zip abertos",r.zips||0],["Arquivos encontrados",r.discovered],["Importados",r.imported],["Duplicados (ignorados)",r.duplicates],
       ["Falhas",r.failed],["DICOM",r.dicom],["Imagens",r.images],["Vídeos",r.videos],["PDFs",r.pdfs],
       ["Imagens comprimidas",r.compressedSeries],["Tamanho importado",fmtBytes(r.bytes)]];
+    if(REMOTE.on) rows.push(["Guardados no site",r.shared||0],["Guardados neste dispositivo",r.imported-(r.shared||0)]);
     for(const[k,v]of rows) box.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v"+(k==="Falhas"&&v?" danger-c":""),text:String(v)})));
     if(r.failed){ const fails=r.items.filter(i=>i.status==="falha"); box.append(el("div",{style:"margin-top:8px;color:var(--danger);font-size:11.5px"},"Falhas: "+fails.map(f=>f.name+(f.error?" ("+f.error+")":"")).join(", "))); }
     p.append(box);
@@ -2298,9 +2726,12 @@ function setupDropzone(){
   dz.addEventListener("drop",async e=>{ e.stopPropagation(); const files=await entriesFromDataTransfer(e.dataTransfer); if(files.length) runImportUI(files); });
 }
 async function verifyIntegrity(){
-  const box=$("#integResult"); box.innerHTML="<span class='muted-c'>Verificando…</span>";
-  let ok=0,bad=0; const fails=[];
-  for(const f of APP.files){ const buf=await getBuf(f.id); if(!buf){bad++;fails.push(f.name+" (dados ausentes)");continue;}
+  const box=$("#integResult"); if(!box) return; box.innerHTML="<span class='muted-c'>Verificando…</span>";
+  let ok=0,bad=0,n=0; const fails=[], list=APP.files.slice();
+  for(const f of list){
+    let buf=null; try{ buf=await getBuf(f.id); }catch(e){}
+    n++; if(n%20===0||n===list.length) box.innerHTML="<span class='muted-c'>Verificando… "+n+" / "+list.length+"</span>";
+    if(!buf){bad++;fails.push(f.name+" (dados ausentes)");continue;}
     const h=await sha256Hex(buf); if(h===f.hash)ok++; else {bad++;fails.push(f.name+" (hash divergente)");} }
   box.innerHTML="<div class='row-line'><span>Íntegros</span><span class='v ok-c'>"+ok+"</span></div>"+
     "<div class='row-line'><span>Com problema</span><span class='v "+(bad?"danger-c":"ok-c")+"'>"+bad+"</span></div>"+
@@ -2312,6 +2743,7 @@ async function verifyIntegrity(){
 function renderExportPage(){
   const p=$("#page-export"); p.innerHTML="";
   p.append(el("h1",{style:"margin-bottom:18px",text:"Exportar"}));
+  if(REMOTE.on){ renderExportRemote(p); return; }
   if(!APP.files.length){ p.append(el("div",{class:"muted-c",text:"Nenhum arquivo."})); return; }
   const c=counts();
   const site=el("div",{class:"panel-box",style:"margin-top:0"});
@@ -2338,9 +2770,43 @@ function renderExportPage(){
   box3.append(el("button",{class:"btn danger",text:"Apagar dados deste dispositivo",onclick:wipeAll}));
   p.append(box3);
 }
+function renderExportRemote(p){
+  const rem=APP.files.filter(f=>f.remote), dic=rem.filter(isImageDicom), jpg=rem.filter(f=>f.kind==="image");
+  const local=APP.files.filter(f=>!f.remote&&!f.shared), shared=APP.files.filter(f=>f.shared);
+  const bytes=l=>l.reduce((a,f)=>a+(f.size||0),0), base=cdRootName();
+  const box=(title,rows,...btns)=>{ const b=el("div",{class:"panel-box",style:"margin-top:0;margin-bottom:14px"}); b.append(el("h3",{text:title}));
+    for(const [k,v] of rows) b.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v",text:String(v)})));
+    if(btns.length) b.append(el("div",{style:"display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"},...btns)); p.append(b); return b; };
+  box("Exame completo do CD",[["Conteúdo","DICOMDIR, "+dic.length+" imagens DICOM, "+jpg.length+" imagens JPEG"],["Arquivos",rem.length],["Tamanho",fmtBytes(bytes(rem))]],
+    el("button",{class:"btn primary",text:"Baixar exame completo (.zip)",onclick:()=>exportCD(rem,base+"_completo")}));
+  const ser=box("Por série",[]);
+  for(const st of APP.studies) for(const s of st.series){
+    if(s.kind!=="dicom"||!s.instances.every(f=>f.remote)) continue;
+    const ver=rem.find(f=>f.path===s.instances[0].folder+"/VERSION"), files=s.instances.concat(ver?[ver]:[]);
+    ser.append(el("div",{class:"row-line"},el("span",{text:"Série "+s.number+" · "+(s.desc||"")+" · "+s.instances.length+" imagens · "+fmtBytes(bytes(s.instances))}),
+      el("span",{},el("button",{class:"btn ghost",text:"Baixar (.zip)",onclick:()=>exportCD(files,base+"_serie_"+s.number)}))));
+  }
+  box("Imagens JPEG do CD",[["Imagens",jpg.length],["Tamanho",fmtBytes(bytes(jpg))]],
+    el("button",{class:"btn",text:"Baixar imagens JPEG (.zip)",onclick:()=>exportCD(jpg,base+"_JPEG")}));
+  box("Inventário com SHA-256",[["Arquivos listados",(REMOTE.manifest.inventory||[]).length]],
+    el("button",{class:"btn",text:"Baixar inventário (.csv)",onclick:exportInventoryCSV}));
+  box("Imagem em exibição",[],
+    el("button",{class:"btn",text:"Visualizador (.png)",onclick:()=>{ if(!V.frameCanvas){ toast("Abra uma imagem no Visualizador.","warn"); return; } saveViewerPNG(); }}),
+    el("button",{class:"btn",text:"Volume 3D (.png)",onclick:()=>{ if(!VR.tex){ toast("Abra o Volume 3D.","warn"); return; } vrSnapshot(); }}));
+  if(document.querySelector('meta[name="exam-offline-viewer"]'))
+    box("Visualizador para uso sem internet",[["Arquivo","Visualizador_Tomografia.html"]],
+      el("button",{class:"btn",text:"Baixar visualizador (.html)",onclick:exportOfflineViewer}));
+  if(shared.length) box("Laudo e documentos do site",[["Arquivos",shared.length],["Tamanho",fmtBytes(bytes(shared))]],
+    el("button",{class:"btn",text:"Baixar documentos (.zip)",onclick:()=>exportEntries(shared,base+"_documentos")}));
+  if(local.length) box("Adicionados neste dispositivo",[["Arquivos",local.length],["Tamanho",fmtBytes(bytes(local))]],
+    el("button",{class:"btn",text:"Baixar (.zip)",onclick:()=>exportEntries(local,base+"_adicionados")}),
+    el("button",{class:"btn danger",text:"Apagar deste dispositivo",onclick:wipeAll}));
+}
 async function wipeAll(){
-  if(!confirm("Apagar TODOS os dados importados deste navegador? Faça o backup .zip antes. Esta ação não pode ser desfeita.")) return;
+  if(!(await confirmInPage("Apagar dados deste dispositivo","Apagar os arquivos adicionados e as medições guardadas neste navegador? Esta ação não pode ser desfeita.","Apagar"))) return;
   await idbClear("files"); await idbClear("blobs"); await idbClear("meta");
+  if(REMOTE.on){ APP.files=APP.files.filter(f=>f.remote||f.shared); APP.measurements={}; APP.report=null;
+    buildHierarchy(); renderSeriesList(); updateTopStatus(); drawOverlay(); renderMeasList(); renderExportPage(); toast("Dados deste dispositivo apagados.","ok"); return; }
   APP.files=[];APP.studies=[];APP.measurements={};APP.examInfo=null;APP.current={series:null,index:0,image:null};APP.report=null;
   renderSeriesList();updateTopStatus();stopCine();V.frameCanvas=null;drawViewer();
   showStageMsg("Nenhuma imagem selecionada","");
@@ -2350,21 +2816,31 @@ async function wipeAll(){
 /* =====================================================================
    VOLUME (para MPR e MIP) — construído só de séries com volume 3D válido
    ===================================================================== */
-async function buildVolume(s){
+const VOL_PENDING=new Map();
+async function buildVolume(s,progress){
   if(APP.volumes[s.id]) return APP.volumes[s.id];
-  const m0=s.instances[0].meta; const nx=m0.cols, ny=m0.rows, nz=s.instances.length;
-  if(nx*ny*nz*2 > 500*1024*1024) throw new Error("Volume grande demais para reconstruir neste navegador ("+nx+"×"+ny+"×"+nz+").");
-  const vol=new Int16Array(nx*ny*nz);
-  for(let z=0;z<nz;z++){
-    const f=s.instances[z]; const buf=await getBuf(f.id);
-    const fr=extractModality(f.meta,buf,0); if(!fr) throw new Error("Falha ao ler o corte "+(z+1));
-    const base=z*nx*ny; const v=fr.values;
-    for(let i=0;i<nx*ny;i++){ let x=v[i]; if(x>32767)x=32767; else if(x<-32768)x=-32768; vol[base+i]=x; }
-  }
-  const colSp=m0.pixelSpacing?m0.pixelSpacing[1]:1, rowSp=m0.pixelSpacing?m0.pixelSpacing[0]:1;
-  const sliceSp=s._sliceSpacing||m0.sliceThickness||1;
-  const V3={nx,ny,nz,vol,colSp,rowSp,sliceSp,series:s};
-  APP.volumes[s.id]=V3; return V3;
+  if(VOL_PENDING.has(s.id)){ const p=VOL_PENDING.get(s.id); if(progress) p.listeners.push(progress); return p.pr; }
+  const job={listeners:progress?[progress]:[],pr:null};
+  job.pr=(async()=>{
+    const m0=s.instances[0].meta; const nx=m0.cols, ny=m0.rows, nz=s.instances.length;
+    if(nx*ny*nz*2 > 500*1024*1024) throw new Error("Volume grande demais para reconstruir neste navegador ("+nx+"×"+ny+"×"+nz+").");
+    const vol=new Int16Array(nx*ny*nz);
+    for(let z=0;z<nz;z++){
+      const fr=await frameFor(s.instances[z],0); if(!fr) throw new Error("Falha ao ler o corte "+(z+1));
+      if(fr.color||fr.width!==nx||fr.height!==ny) throw new Error("Corte "+(z+1)+" com formato diferente dos demais.");
+      const base=z*nx*ny; const v=fr.values;
+      for(let i=0;i<nx*ny;i++){ let x=v[i]; if(x>32767)x=32767; else if(x<-32768)x=-32768; vol[base+i]=x; }
+      for(const cb of job.listeners) try{ cb(z+1,nz); }catch(e){}
+    }
+    const m1=s.instances[0].meta;   // cabeçalho completo, já lido do arquivo
+    const colSp=m1.pixelSpacing?m1.pixelSpacing[1]:1, rowSp=m1.pixelSpacing?m1.pixelSpacing[0]:1;
+    const sliceSp=s._sliceSpacing||m1.sliceThickness||1;
+    const V3={nx,ny,nz,vol,colSp,rowSp,sliceSp,series:s};
+    for(const k in APP.volumes) delete APP.volumes[k];   // um volume por vez na memória
+    APP.volumes[s.id]=V3; return V3;
+  })();
+  VOL_PENDING.set(s.id,job);
+  try{ return await job.pr; } finally{ VOL_PENDING.delete(s.id); }
 }
 function planeFrame(width,height,values){ return {color:false,mono1:false,width,height,values}; }
 
@@ -2471,8 +2947,8 @@ const MIPS={V3:null,dir:"ax",slab:0,center:0,ww:2000,wl:400};
 function renderMIP(){
   const p=$("#page-mip"); p.innerHTML="";
   MIPS.dir="ax"; MIPS.slab=0; MIPS.center=0.5;   // sincroniza o estado com os controles recém-criados
-  p.append(el("h1",{text:"Reconstrução 3D / MIP"}),
-    el("div",{class:"sub",text:"Projeção de intensidade máxima (MIP)"}));
+  p.append(el("h1",{text:"Projeção MIP"}),
+    el("div",{class:"sub",text:"Projeção de intensidade máxima"}));
   const volSeries=APP.studies.flatMap(st=>st.series).filter(s=>s.isVolume);
   if(!volSeries.length){ p.append(el("div",{class:"muted-c",text:"Nenhum volume disponível."})); return; }
   const bar=el("div",{style:"display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px"});
@@ -2532,6 +3008,457 @@ function drawMIP(){
 }
 
 /* =====================================================================
+   VOLUME 3D (VR) — renderização volumétrica por lançamento de raios (WebGL2)
+   O volume vai para a placa de vídeo em HU (meia precisão). Cada pixel lança um raio
+   ortográfico pelo volume, posicionado no espaço do paciente (DICOM LPS: +x esquerda,
+   +y posterior, +z superior), então as vistas e as letras de orientação são anatômicas.
+   ===================================================================== */
+const VR={series:null,V3:null,gl:null,prog:null,vao:null,tex:null,U:{},dims:null,A:null,Ainv:null,diag:1,minSp:1,
+  cam:null,target:[0,0,0],zoom:1,fit:{target:[0,0,0],zoom:1},mode:0,thr:250,thrS:300,opac:0.9,skin:0.35,ww:2000,wl:400,
+  clip:[0,1,0,1,0,1],cut:0,reduced:false,noTable:true,smooth:true,tmask:null,spin:false,dirty:false,fast:false,raf:0,idleT:0,view:"Anterior",axes:null,lost:false,loading:false};
+const VR_MODES=["Osso","Superfície óssea","Osso e pele","MIP"];
+// [direita da tela, topo da tela] em coordenadas do paciente
+const VR_VIEWS={Anterior:[[1,0,0],[0,0,1]],Posterior:[[-1,0,0],[0,0,1]],Direita:[[0,-1,0],[0,0,1]],
+  Esquerda:[[0,1,0],[0,0,1]],Superior:[[-1,0,0],[0,-1,0]],Inferior:[[1,0,0],[0,-1,0]]};
+const v3={add:(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],sub:(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]],mul:(a,s)=>[a[0]*s,a[1]*s,a[2]*s],
+  dot:(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross:(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]],
+  len:a=>Math.hypot(a[0],a[1],a[2]),norm:a=>{ const l=Math.hypot(a[0],a[1],a[2])||1; return [a[0]/l,a[1]/l,a[2]/l]; }};
+function rotAxis(v,k,ang){ const c=Math.cos(ang),s=Math.sin(ang),kv=v3.cross(k,v),kd=v3.dot(k,v)*(1-c);
+  return [v[0]*c+kv[0]*s+k[0]*kd, v[1]*c+kv[1]*s+k[1]*kd, v[2]*c+kv[2]*s+k[2]*kd]; }
+// matriz 3x3 em colunas (m[col*3+lin])
+function inv3(m){
+  const [a,b,c,d,e,f,g,h,i]=m, A=e*i-f*h, B=-(d*i-f*g), C=d*h-e*g, det=a*A+b*B+c*C;
+  if(Math.abs(det)<1e-12) return null;
+  const r=[A,-(b*i-c*h),b*f-c*e, B,a*i-c*g,-(a*f-c*d), C,-(a*h-b*g),a*e-b*d];
+  return r.map(x=>x/det);
+}
+function mulM3(m,v){ return [m[0]*v[0]+m[3]*v[1]+m[6]*v[2], m[1]*v[0]+m[4]*v[1]+m[7]*v[2], m[2]*v[0]+m[5]*v[1]+m[8]*v[2]]; }
+
+const VR_VS=`#version 300 es
+void main(){ vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2)); gl_Position=vec4(p*2.0-1.0,0.0,1.0); }`;
+const VR_FS=`#version 300 es
+precision highp float; precision highp sampler3D;
+uniform sampler3D uVol; uniform vec2 uRes; uniform vec3 uR,uU,uF,uT; uniform vec2 uHalf; uniform mat3 uAinv;
+uniform float uDiag,uStep,uRef,uCut,uThr,uRamp,uOpac,uSkin,uWW,uWL; uniform int uMode; uniform vec3 uCmin,uCmax,uTexel;
+out vec4 o;
+float H(vec3 t){ return texture(uVol,t).r; }
+vec3 gradW(vec3 t){ vec3 d=uTexel;
+  vec3 g=vec3(H(t+vec3(d.x,0.,0.))-H(t-vec3(d.x,0.,0.)),H(t+vec3(0.,d.y,0.))-H(t-vec3(0.,d.y,0.)),H(t+vec3(0.,0.,d.z))-H(t-vec3(0.,0.,d.z)));
+  return transpose(uAinv)*(g/(2.0*d)); }
+vec3 shade(vec3 base,vec3 t){ vec3 g=gradW(t); float gl=length(g); if(gl<1e-3) return base*0.5;
+  float df=abs(dot(g/gl,uF)); return base*(0.2+0.8*df)+vec3(pow(df,48.0)*0.32); }
+vec3 bone(float v){ return mix(vec3(0.84,0.68,0.50),vec3(1.0,0.97,0.91),clamp((v-uThr)/800.0,0.0,1.0)); }
+void main(){
+  vec2 n=gl_FragCoord.xy/uRes*2.0-1.0;
+  vec3 p0=uT+uR*(n.x*uHalf.x)+uU*(n.y*uHalf.y)-uF*uDiag;
+  vec3 t0=uAinv*p0+0.5, td=uAinv*uF;
+  td=mix(td,vec3(1e-7),vec3(lessThan(abs(td),vec3(1e-7))));
+  vec3 ia=(uCmin-t0)/td, ib=(uCmax-t0)/td, lo=min(ia,ib), hi=max(ia,ib);
+  float tn=max(max(max(lo.x,lo.y),lo.z),uDiag+uCut), tf=min(min(hi.x,hi.y),hi.z);
+  vec3 bg=uMode==3?vec3(0.0):mix(vec3(0.012,0.016,0.024),vec3(0.05,0.066,0.095),gl_FragCoord.y/uRes.y);
+  if(tf<=tn){ o=vec4(bg,1.0); return; }
+  float s=tn+fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453)*uStep, ps=tn;
+  vec3 acc=vec3(0.0); float a=0.0, mx=-4000.0;
+  for(int i=0;i<8000;i++){
+    if(s>tf) break;
+    vec3 t=t0+td*s; float v=H(t);
+    if(uMode==3){ mx=max(mx,v); }
+    else if(uMode==1){
+      if(v>=uThr){ float sa=ps, sb=s;
+        for(int k=0;k<7;k++){ float sm=0.5*(sa+sb); if(H(t0+td*sm)>=uThr) sb=sm; else sa=sm; }
+        acc=shade(bone(uThr+250.0),t0+td*sb); a=1.0; break; }
+    }else{
+      float ab=smoothstep(uThr,uThr+uRamp,v)*uOpac; vec3 c=bone(v);
+      if(uMode==2){ float sk=smoothstep(-520.0,-260.0,v)*(1.0-smoothstep(uThr-160.0,uThr,v))*uSkin; if(sk>ab){ ab=sk; c=vec3(0.93,0.68,0.57); } }
+      if(ab>0.002){ ab=1.0-pow(1.0-ab,uStep/uRef); acc+=(1.0-a)*ab*shade(c,t); a+=(1.0-a)*ab; if(a>0.985) break; }
+    }
+    ps=s; s+=uStep;
+  }
+  if(uMode==3){ float g=clamp((mx-(uWL-0.5))/max(uWW-1.0,1.0)+0.5,0.0,1.0); o=vec4(vec3(g),1.0); return; }
+  o=vec4(acc+(1.0-a)*bg,1.0);
+}`;
+
+function vrSupported(){ try{ const c=document.createElement("canvas"); return !!c.getContext("webgl2"); }catch(e){ return false; } }
+function vrSetupGL(cv){
+  const gl=cv.getContext("webgl2",{antialias:false,alpha:false,depth:false,preserveDrawingBuffer:true,powerPreference:"high-performance"});
+  if(!gl) return false;
+  const sh=(type,src)=>{ const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)||"shader"); return s; };
+  const pr=gl.createProgram(); gl.attachShader(pr,sh(gl.VERTEX_SHADER,VR_VS)); gl.attachShader(pr,sh(gl.FRAGMENT_SHADER,VR_FS)); gl.linkProgram(pr);
+  if(!gl.getProgramParameter(pr,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(pr)||"programa");
+  VR.gl=gl; VR.prog=pr; VR.vao=gl.createVertexArray(); VR.U={};
+  for(const n of ["uVol","uRes","uR","uU","uF","uT","uHalf","uAinv","uDiag","uStep","uRef","uCut","uThr","uRamp","uOpac","uSkin","uWW","uWL","uMode","uCmin","uCmax","uTexel"])
+    VR.U[n]=gl.getUniformLocation(pr,n);
+  return true;
+}
+// meia precisão (IEEE 754 binary16) para os valores inteiros de HU
+let HALF_LUT=null;
+function halfLUT(){
+  if(HALF_LUT) return HALF_LUT;
+  const lut=new Uint16Array(65536), f=new Float32Array(1), u=new Uint32Array(f.buffer);
+  for(let i=0;i<65536;i++){ f[0]=i-32768; const x=u[0], sign=(x>>>16)&0x8000, e=((x>>>23)&0xff)-127+15, m=x&0x7fffff;
+    let h; if(e<=0) h=sign; else if(e>=31) h=sign|0x7c00; else { h=sign|(e<<10)|(m>>>13); if(m&0x1000) h++; }
+    lut[i]=h; }
+  return HALF_LUT=lut;
+}
+function vrGeometry(V3,f){
+  const s=V3.series, m0=s.instances[0].meta, mN=s.instances[s.instances.length-1].meta;
+  const iop=m0.iop&&m0.iop.length===6?m0.iop:[1,0,0,0,1,0], r=v3.norm(iop.slice(0,3)), c=v3.norm(iop.slice(3,6));
+  let k=(m0.ipp&&mN.ipp&&V3.nz>1)?v3.mul(v3.sub(mN.ipp,m0.ipp),1/(V3.nz-1)):v3.mul(v3.norm(v3.cross(r,c)),V3.sliceSp);
+  if(v3.len(k)<1e-6) k=v3.mul(v3.norm(v3.cross(r,c)),V3.sliceSp||1);
+  const a0=v3.mul(r,V3.colSp*V3.nx), a1=v3.mul(c,V3.rowSp*V3.ny), a2=v3.mul(k,V3.nz);
+  VR.A=[...a0,...a1,...a2]; VR.Ainv=inv3(VR.A);
+  VR.diag=Math.sqrt(v3.dot(a0,a0)+v3.dot(a1,a1)+v3.dot(a2,a2));
+  VR.minSp=Math.min(V3.colSp*f,V3.rowSp*f,v3.len(k));
+  // eixos da textura -> direção anatômica dominante (para os controles de recorte)
+  const names=[["Direita","Esquerda"],["Anterior","Posterior"],["Inferior","Superior"]];
+  VR.axes=[a0,a1,a2].map(a=>{ const d=v3.norm(a); let idx=0; for(let j=1;j<3;j++) if(Math.abs(d[j])>Math.abs(d[idx])) idx=j;
+    return {idx,sign:d[idx]>=0?1:-1,names:names[idx]}; });
+}
+// Mesa do tomógrafo, suportes e realces de borda, só para o 3D (os dados do exame não mudam).
+// Numa grade reduzida (blocos de 4×4×2 voxels):
+//  1) bloco majoritariamente AR (média < -300 HU): nada denso ali é osso (os ossos da mão ficam
+//     cercados de partes moles). Some o que passa de 150 HU; a pele, menos densa, fica.
+//  2) grupos densos cercados quase só de ar (as partes grossas da mesa e do suporte) somem inteiros.
+//  3) realces de borda da pele do filtro ósseo: pouco densos (< 400 HU) e encostados no ar.
+//  4) fora do corpo: só ficam as partes moles (média > -350 HU) ligadas aos ossos, com uma célula
+//     de folga além da pele; colchão, coxins e restos da mesa somem (importa para pele e MIP).
+// Osso cortical passa de 700 HU e fica cercado de partes moles: nenhuma regra o alcança.
+const NB6=[[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+function vrTableMask(V3){
+  const {nx,ny,nz,vol}=V3, fx=4, fz=2, gx=Math.ceil(nx/fx), gy=Math.ceil(ny/fx), gz=Math.ceil(nz/fz), N=gx*gy*gz;
+  const gmax=new Int16Array(N).fill(-32768), gsum=new Float32Array(N), gcnt=new Uint16Array(N);
+  for(let z=0;z<nz;z++){ const cz=((z/fz)|0)*gy; for(let y=0;y<ny;y++){ const cy=(cz+((y/fx)|0))*gx, b=(z*ny+y)*nx;
+    for(let x=0;x<nx;x++){ const c=cy+((x/fx)|0), v=vol[b+x]; if(v>gmax[c]) gmax[c]=v; gsum[c]+=v; gcnt[c]++; } } }
+  const mask=new Uint8Array(N), mean=c=>gsum[c]/gcnt[c];
+  let airCells=0; for(let c=0;c<N;c++) if(mean(c)<-300){ mask[c]=1; airCells++; }
+  const T=200, lab=new Int32Array(N), q=new Int32Array(N), comps=[]; let nl=0;
+  for(let s0=0;s0<N;s0++){
+    if(lab[s0]||mask[s0]||gmax[s0]<T) continue;
+    nl++; let h=0,t=0,cnt=0,ns=0,nn=0,air=0,mx=-32768; q[t++]=s0; lab[s0]=nl;
+    while(h<t){ const c=q[h++]; cnt++; if(gmax[c]>mx) mx=gmax[c]; const x=c%gx, y=((c/gx)|0)%gy, z=(c/(gx*gy))|0;
+      for(const d of NB6){ const X=x+d[0],Y=y+d[1],Z=z+d[2]; if(X<0||Y<0||Z<0||X>=gx||Y>=gy||Z>=gz) continue;
+        const e=(Z*gy+Y)*gx+X; if(gmax[e]>=T&&!mask[e]){ if(!lab[e]){ lab[e]=nl; q[t++]=e; } } else { const m=mean(e); ns+=m; nn++; if(m<-500) air++; } } }
+    comps.push({id:nl,cnt,around:nn?ns/nn:0,airFrac:nn?air/nn:0,max:mx});
+  }
+  const isTable=new Uint8Array(nl+1); let parts=0, removed=0;
+  for(const c of comps) if(c.around<-560||(c.airFrac>=0.35&&c.max<400)){ isTable[c.id]=1; parts++; removed+=c.cnt; }
+  for(let c=0;c<N;c++){ if(!lab[c]||!isTable[lab[c]]) continue; const x=c%gx, y=((c/gx)|0)%gy, z=(c/(gx*gy))|0;
+    for(let dz=-1;dz<=1;dz++) for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ const X=x+dx,Y=y+dy,Z=z+dz;
+      if(X>=0&&Y>=0&&Z>=0&&X<gx&&Y<gy&&Z<gz) mask[(Z*gy+Y)*gx+X]=2; } }   // grupo inteiro, com uma célula de margem
+  // corpo: a partir dos ossos (blocos com osso cortical cercado de tecido), pelas partes moles
+  const body=new Uint8Array(N); let h=0,t=0;
+  for(let c=0;c<N;c++) if(gmax[c]>=700&&mean(c)>-350&&mask[c]!==2){ body[c]=1; q[t++]=c; }
+  while(h<t){ const c=q[h++], x=c%gx, y=((c/gx)|0)%gy, z=(c/(gx*gy))|0;
+    for(const d of NB6){ const X=x+d[0],Y=y+d[1],Z=z+d[2]; if(X<0||Y<0||Z<0||X>=gx||Y>=gy||Z>=gz) continue;
+      const e=(Z*gy+Y)*gx+X; if(!body[e]&&mask[e]!==2&&mean(e)>-350){ body[e]=1; q[t++]=e; } } }
+  let bodyCells=0;
+  if(t&&t<N*0.6){   // só se o corpo foi achado de forma plausível
+    const keep=new Uint8Array(N);
+    for(let c=0;c<N;c++){ if(!body[c]) continue; const x=c%gx, y=((c/gx)|0)%gy, z=(c/(gx*gy))|0;
+      for(let dz=-1;dz<=1;dz++) for(let dy=-1;dy<=1;dy++) for(let dx=-1;dx<=1;dx++){ const X=x+dx,Y=y+dy,Z=z+dz;
+        if(X>=0&&Y>=0&&Z>=0&&X<gx&&Y<gy&&Z<gz) keep[(Z*gy+Y)*gx+X]=1; } }
+    for(let c=0;c<N;c++) if(!keep[c]) mask[c]=3; else bodyCells++;
+  }
+  return {mask,gx,gy,gz,fx,fz,removed,parts,airCells,bodyCells};
+}
+function vrMasked(x,y,z){ const m=VR.noTable&&VR.tmask; if(!m) return false; return m.mask[(((z/m.fz)|0)*m.gy+((y/m.fx)|0))*m.gx+((x/m.fx)|0)]>0; }
+// suavização 1-2-1 nos três eixos (só para o 3D): reduz o ruído pontilhado do filtro ósseo
+function smooth121(a,nx,ny,nz){
+  const line=new Int32Array(Math.max(nx,ny,nz)), sxy=nx*ny;
+  const pass=(n,count,base,stride)=>{ for(let q=0;q<count;q++){ const o=base(q);
+    for(let i=0;i<n;i++) line[i]=a[o+i*stride];
+    for(let i=0;i<n;i++) a[o+i*stride]=(line[i>0?i-1:0]+2*line[i]+line[i<n-1?i+1:n-1])>>2; } };
+  pass(nx,ny*nz,q=>q*nx,1);
+  pass(ny,nx*nz,q=>((q/nx)|0)*sxy+(q%nx),nx);
+  pass(nz,sxy,q=>q,sxy);
+}
+// caixa do osso (percentis), para enquadrar a mão ao abrir
+function vrBoneFit(V3){
+  const {nx,ny,nz,vol}=V3, cx=new Float64Array(nx), cy=new Float64Array(ny), cz=new Float64Array(nz); let tot=0;
+  for(let z=0;z<nz;z+=2) for(let y=0;y<ny;y+=2){ const b=(z*ny+y)*nx; for(let x=0;x<nx;x+=2) if(vol[b+x]>=300&&!vrMasked(x,y,z)){ cx[x]++; cy[y]++; cz[z]++; tot++; } }
+  if(tot<50) return {target:[0,0,0],zoom:1};
+  const rng=arr=>{ let acc=0,lo=0,hi=arr.length-1; const a=tot*0.004,b=tot*0.996;
+    for(let i=0;i<arr.length;i++){ acc+=arr[i]; if(acc>=a){ lo=i; break; } } acc=0;
+    for(let i=0;i<arr.length;i++){ acc+=arr[i]; if(acc>=b){ hi=i; break; } } return [lo,hi]; };
+  const [x0,x1]=rng(cx),[y0,y1]=rng(cy),[z0,z1]=rng(cz);
+  const t=[((x0+x1)/2+0.5)/nx-0.5,((y0+y1)/2+0.5)/ny-0.5,((z0+z1)/2+0.5)/nz-0.5];
+  const ext=[(x1-x0+1)/nx,(y1-y0+1)/ny,(z1-z0+1)/nz], A=VR.A;
+  const size=Math.sqrt([0,1,2].reduce((s,j)=>{ const col=[A[j*3],A[j*3+1],A[j*3+2]]; const l=v3.len(col)*ext[j]; return s+l*l; },0));
+  return {target:mulM3(A,t),zoom:clamp(VR.diag/(size*1.12),1,6)};
+}
+function vrUpload(){
+  const gl=VR.gl, V3=VR.V3; if(!gl||!V3) return;
+  if(VR.tex){ gl.deleteTexture(VR.tex); VR.tex=null; }
+  const max3d=gl.getParameter(gl.MAX_3D_TEXTURE_SIZE)||256;
+  let f=VR.reduced?2:1; while(Math.max(V3.nx/f,V3.ny/f)>max3d) f*=2;
+  if(V3.nz>max3d){ VR.err="Volume com cortes demais para esta placa de vídeo."; return; }
+  const nx=Math.floor(V3.nx/f), ny=Math.floor(V3.ny/f), nz=V3.nz, src=V3.vol, w=new Int16Array(nx*ny*nz);
+  if(f===1) w.set(src);
+  else{ const k=f*f;
+    for(let z=0;z<nz;z++) for(let y=0;y<ny;y++){ const o=(z*ny+y)*nx;
+      for(let x=0;x<nx;x++){ let s=0; for(let yy=0;yy<f;yy++){ const b=(z*V3.ny+y*f+yy)*V3.nx+x*f; for(let xx=0;xx<f;xx++) s+=src[b+xx]; }
+        w[o+x]=Math.round(s/k); } } }
+  const m=VR.noTable&&VR.tmask;
+  if(m){ for(let z=0;z<nz;z++){ const cz=((z/m.fz)|0)*m.gy; for(let y=0;y<ny;y++){ const cy=(cz+(((y*f)/m.fx)|0))*m.gx, o=(z*ny+y)*nx;
+    for(let x=0;x<nx;x++){ const t=m.mask[cy+(((x*f)/m.fx)|0)]; if(t>=2||(t===1&&w[o+x]>=150)) w[o+x]=-1024; } } } }
+  if(VR.smooth) smooth121(w,nx,ny,nz);
+  const lut=halfLUT(), data=new Uint16Array(w.length);
+  for(let i=0;i<w.length;i++) data[i]=lut[w[i]+32768];
+  const tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_3D,tex); gl.pixelStorei(gl.UNPACK_ALIGNMENT,1);
+  gl.texImage3D(gl.TEXTURE_3D,0,gl.R16F,nx,ny,nz,0,gl.RED,gl.HALF_FLOAT,data);
+  const err=gl.getError();
+  if(err===gl.OUT_OF_MEMORY&&f===1){ gl.deleteTexture(tex); VR.reduced=true; return vrUpload(); }
+  for(const [p,v] of [[gl.TEXTURE_MIN_FILTER,gl.LINEAR],[gl.TEXTURE_MAG_FILTER,gl.LINEAR],[gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_R,gl.CLAMP_TO_EDGE]])
+    gl.texParameteri(gl.TEXTURE_3D,p,v);
+  VR.tex=tex; VR.dims=[nx,ny,nz]; VR.factor=f; vrGeometry(V3,f);
+}
+function vrSetView(name){
+  const [r,u]=VR_VIEWS[name]||VR_VIEWS.Anterior;
+  VR.cam={r:r.slice(),u:u.slice(),f:v3.cross(u,r)}; VR.view=name;
+  VR.target=VR.fit.target.slice(); VR.zoom=VR.fit.zoom; vrDirty();
+  $$("#vrViews button").forEach(b=>b.classList.toggle("on",b.dataset.v===name));
+}
+function vrOrtho(){ const f=v3.norm(VR.cam.f), r=v3.norm(v3.cross(f,VR.cam.u)), u=v3.norm(v3.cross(r,f)); VR.cam={r,u,f}; }
+function vrRotate(dx,dy){
+  const k=0.0085; let {r,u,f}=VR.cam;
+  if(dx){ const a=-dx*k; r=rotAxis(r,u,a); f=rotAxis(f,u,a); }
+  if(dy){ const b=-dy*k; u=rotAxis(u,r,b); f=rotAxis(f,r,b); }
+  VR.cam={r,u,f}; vrOrtho(); VR.view="";
+  $$("#vrViews button").forEach(b=>b.classList.remove("on"));
+}
+function vrMMperPx(){ const cv=$("#vrCanvas"); return cv&&cv.clientHeight?VR.diag/VR.zoom/cv.clientHeight:1; }
+function vrPan(dx,dy){ const s=vrMMperPx(); VR.target=v3.add(v3.sub(VR.target,v3.mul(VR.cam.r,dx*s)),v3.mul(VR.cam.u,dy*s)); }
+function vrActive(){ const v=$("#view-vr"); return !!(v&&v.classList.contains("active")); }
+function vrDirty(fast){
+  VR.dirty=true;
+  if(fast){ VR.fast=true; clearTimeout(VR.idleT); VR.idleT=setTimeout(()=>{ VR.fast=false; VR.dirty=true; vrLoop(); },230); }
+  vrLoop();
+}
+function vrLoop(){
+  if(VR.raf) return;
+  VR.raf=requestAnimationFrame(()=>{ VR.raf=0;
+    if(!vrActive()||!VR.gl||VR.lost) return;
+    if(VR.spin){ vrRotate(3,0); VR.fast=true; VR.dirty=true; }
+    if(VR.dirty){ VR.dirty=false; vrDraw(); vrOverlay(); }
+    if(VR.spin) vrLoop(); });
+}
+function vrPause(){ if(VR.spin) vrSetSpin(false); if(VR.raf){ cancelAnimationFrame(VR.raf); VR.raf=0; } }
+function vrSetSpin(on){ VR.spin=on; const b=$("#vrSpin"); if(b) b.classList.toggle("on",on);
+  if(!on){ VR.fast=false; vrDirty(); } else vrLoop(); }
+// desenha um quadro; scale>1 só para salvar imagem em alta resolução
+function vrDraw(scale){
+  const gl=VR.gl; if(!gl||!VR.tex||!VR.Ainv) return;
+  const cv=gl.canvas, cw=cv.clientWidth, ch=cv.clientHeight; if(!cw||!ch) return;
+  let coarse=false; try{ coarse=matchMedia("(pointer:coarse)").matches; }catch(e){}
+  const dpr=Math.min(window.devicePixelRatio||1,scale?2:1.5);
+  let w=Math.round(cw*dpr*(VR.fast?0.5:1)), h=Math.round(ch*dpr*(VR.fast?0.5:1));
+  const cap=scale?3.2e6:VR.fast?(coarse?140000:240000):(coarse?600000:1150000);
+  if(w*h>cap){ const k=Math.sqrt(cap/(w*h)); w=Math.max(1,Math.round(w*k)); h=Math.max(1,Math.round(h*k)); }
+  if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+  gl.viewport(0,0,w,h); gl.useProgram(VR.prog); gl.bindVertexArray(VR.vao);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_3D,VR.tex);
+  const U=VR.U, halfH=VR.diag*0.5/VR.zoom, step=VR.minSp*(VR.fast?1.9:(VR.mode===3?0.9:0.62));
+  const [c0,c1,c2,c3,c4,c5]=vrClipTex();
+  gl.uniform1i(U.uVol,0); gl.uniform2f(U.uRes,w,h);
+  gl.uniform3fv(U.uR,VR.cam.r); gl.uniform3fv(U.uU,VR.cam.u); gl.uniform3fv(U.uF,VR.cam.f); gl.uniform3fv(U.uT,VR.target);
+  gl.uniform2f(U.uHalf,halfH*w/h,halfH); gl.uniformMatrix3fv(U.uAinv,false,new Float32Array(VR.Ainv));
+  gl.uniform1f(U.uDiag,VR.diag); gl.uniform1f(U.uStep,step); gl.uniform1f(U.uRef,0.5);
+  gl.uniform1f(U.uCut,VR.cut>0?(-0.5+VR.cut)*VR.diag*0.9:-1e6);
+  gl.uniform1f(U.uThr,VR.mode===1?VR.thrS:VR.thr); gl.uniform1f(U.uRamp,260); gl.uniform1f(U.uOpac,VR.opac);
+  gl.uniform1f(U.uSkin,VR.skin*0.06); gl.uniform1f(U.uWW,VR.ww); gl.uniform1f(U.uWL,VR.wl); gl.uniform1i(U.uMode,VR.mode);
+  gl.uniform3f(U.uCmin,c0,c2,c4); gl.uniform3f(U.uCmax,c1,c3,c5);
+  gl.uniform3f(U.uTexel,1/VR.dims[0],1/VR.dims[1],1/VR.dims[2]);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+}
+// recorte: os controles estão em ordem anatômica (ex.: Direita -> Esquerda); converte para a textura
+function vrClipTex(){
+  const out=[0,1,0,1,0,1];
+  if(!VR.axes) return out;
+  for(let a=0;a<3;a++){ const lo=VR.clip[a*2], hi=VR.clip[a*2+1];
+    if(VR.axes[a].sign>0){ out[a*2]=lo; out[a*2+1]=hi; } else { out[a*2]=1-hi; out[a*2+1]=1-lo; } }
+  return out;
+}
+// orientação (letras anatômicas) e régua em mm sobre a imagem
+const AX_LETTER=[["D","E"],["A","P"],["I","S"]];
+function vrOverlay(target,W,H,dpr){
+  const ov=target?null:$("#vrOverlay"); let x;
+  if(ov){ dpr=Math.min(window.devicePixelRatio||1,2); W=Math.round(ov.clientWidth*dpr); H=Math.round(ov.clientHeight*dpr);
+    if(ov.width!==W||ov.height!==H){ ov.width=W; ov.height=H; } x=ov.getContext("2d"); x.clearRect(0,0,W,H); }
+  else x=target;
+  if(!VR.cam) return;
+  const fs=Math.round(11*dpr), m=Math.round(12*dpr);
+  x.save(); x.font="600 "+fs+"px ui-monospace,Menlo,Consolas,monospace"; x.textAlign="center"; x.textBaseline="middle";
+  // indicador de orientação
+  const cx=m+Math.round(34*dpr), cy=H-m-Math.round(34*dpr), L=Math.round(24*dpr);
+  const axes=[]; for(let i=0;i<3;i++) for(const sgn of [-1,1]){ const w=[0,0,0]; w[i]=sgn;
+    axes.push({sx:v3.dot(w,VR.cam.r),sy:-v3.dot(w,VR.cam.u),depth:v3.dot(w,VR.cam.f),lab:AX_LETTER[i][sgn<0?0:1],i}); }
+  axes.sort((a,b)=>b.depth-a.depth);
+  const col=["#ff8a8a","#8fe3a5","#8ab8ff"];
+  for(const a of axes){ const ex=cx+a.sx*L, ey=cy+a.sy*L, front=a.depth<=0.15;
+    x.globalAlpha=front?1:0.35; x.strokeStyle=col[a.i]; x.lineWidth=1.5*dpr; x.beginPath(); x.moveTo(cx,cy); x.lineTo(ex,ey); x.stroke();
+    if(Math.hypot(a.sx,a.sy)>0.25){ x.fillStyle=col[a.i]; x.fillText(a.lab,cx+a.sx*(L+9*dpr),cy+a.sy*(L+9*dpr)); } }
+  x.globalAlpha=1;
+  // letras nas bordas da imagem (direção do paciente para cada lado da tela)
+  const sideLab=vec=>{ let best="",bv=0.5; for(let i=0;i<3;i++){ const v=vec[i]; if(Math.abs(v)>bv){ bv=Math.abs(v); best=AX_LETTER[i][v<0?0:1]; } } return best; };
+  x.fillStyle="#cfe0f2"; x.shadowColor="#000"; x.shadowBlur=3*dpr;
+  x.fillText(sideLab(VR.cam.u),W/2,m); x.fillText(sideLab(v3.mul(VR.cam.u,-1)),W/2,H-m);
+  x.fillText(sideLab(v3.mul(VR.cam.r,-1)),m,H/2); x.fillText(sideLab(VR.cam.r),W-m,H/2);
+  // régua
+  const mmPerDev=VR.diag/VR.zoom/H; let len=5; for(const c of [5,10,20,25,50,100]){ if(c/mmPerDev<=150*dpr) len=c; }
+  const px=len/mmPerDev, rx=W-m-px, ry=H-m-4*dpr;
+  x.strokeStyle="#e7eef6"; x.lineWidth=2*dpr; x.beginPath(); x.moveTo(rx,ry-5*dpr); x.lineTo(rx,ry); x.lineTo(rx+px,ry); x.lineTo(rx+px,ry-5*dpr); x.stroke();
+  x.fillStyle="#e7eef6"; x.fillText(len+" mm",rx+px/2,ry-11*dpr);
+  // textos
+  x.textAlign="left"; x.textBaseline="top"; x.font=fs+"px ui-monospace,Menlo,Consolas,monospace";
+  const s=VR.series, l1=s?(s.desc||"Série")+(s.number?" · nº "+s.number:""):"";
+  const l2=VR_MODES[VR.mode]+(VR.mode===3?" · WW "+VR.ww+" WL "+VR.wl:" · "+(VR.mode===1?VR.thrS:VR.thr)+" HU");
+  x.fillText(l1,m,m); x.fillStyle="#9aaabd"; x.fillText(l2,m,m+15*dpr);
+  x.textAlign="right"; x.fillStyle="#cfe0f2"; x.fillText(VR.view?("Vista "+VR.view.toLowerCase()):"Rotação livre",W-m,m);
+  x.fillStyle="#9aaabd"; x.fillText("Zoom "+Math.round(VR.zoom*100)+"%"+(VR.factor>1?" · resolução reduzida":""),W-m,m+15*dpr);
+  x.restore();
+}
+async function vrSnapshot(){
+  if(!VR.gl||!VR.tex) return;
+  const fast=VR.fast; VR.fast=false; vrDraw(true);
+  const g=VR.gl.canvas, c=document.createElement("canvas"); c.width=g.width; c.height=g.height;
+  const x=c.getContext("2d"); x.drawImage(g,0,0); vrOverlay(x,c.width,c.height,c.width/Math.max(1,g.clientWidth));
+  VR.fast=fast; vrDirty();
+  const blob=await new Promise(r=>c.toBlob(r,"image/png"));
+  await saveFile(suggestedName()+"_3D_"+safeName(VR_MODES[VR.mode])+"_"+safeName(VR.view||"livre")+".png",blob);
+}
+function vrMsg(html,frac){
+  const m=$("#vrMsg"); if(!m) return;
+  if(html==null){ m.classList.add("hidden"); return; }
+  m.classList.remove("hidden"); m.innerHTML="<div><div>"+html+"</div>"+(frac!=null?"<div class='progress'><div class='bar' style='width:"+(clamp(frac,0,1)*100).toFixed(1)+"%'></div></div>":"")+"</div>";
+}
+function vrWire(stage){
+  if(stage._wired) return; stage._wired=true;
+  const pts=new Map(); let pinch=0, btn=0;
+  stage.addEventListener("pointerdown",e=>{ try{ stage.setPointerCapture(e.pointerId); }catch(_){} pts.set(e.pointerId,{x:e.clientX,y:e.clientY}); btn=e.button; pinch=0; if(VR.spin) vrSetSpin(false); });
+  stage.addEventListener("pointermove",e=>{ const p=pts.get(e.pointerId); if(!p||!VR.cam) return;
+    const dx=e.clientX-p.x, dy=e.clientY-p.y; p.x=e.clientX; p.y=e.clientY;
+    if(pts.size===1){ if(btn===1||btn===2||e.shiftKey) vrPan(dx,dy); else vrRotate(dx,dy); }
+    else if(pts.size===2){ const [a,b]=[...pts.values()], d=Math.hypot(a.x-b.x,a.y-b.y); if(pinch) VR.zoom=clamp(VR.zoom*d/pinch,0.3,24); pinch=d; vrPan(dx/2,dy/2); }
+    vrDirty(true); });
+  const up=e=>{ pts.delete(e.pointerId); pinch=0; };
+  stage.addEventListener("pointerup",up); stage.addEventListener("pointercancel",up);
+  stage.addEventListener("wheel",e=>{ e.preventDefault(); if(!VR.cam) return; VR.zoom=clamp(VR.zoom*Math.pow(1.0016,-e.deltaY),0.3,24); vrDirty(true); },{passive:false});
+  stage.addEventListener("contextmenu",e=>e.preventDefault());
+  stage.addEventListener("dblclick",()=>vrSetView(VR.view||"Anterior"));
+}
+function renderVR(){
+  const p=$("#page-vr");
+  const volSeries=APP.studies.flatMap(st=>st.series).filter(s=>s.isVolume);
+  const same=VR.series&&volSeries.find(s=>s.id===VR.series.id);
+  if(p._built&&same&&VR.gl){ VR.series=same; vrDirty(); return; }
+  if(VR.gl){ try{ const x=VR.gl.getExtension("WEBGL_lose_context"); if(x) x.loseContext(); }catch(e){} VR.gl=null; VR.tex=null; }
+  p.innerHTML=""; p._built=false;
+  if(!volSeries.length){ p.append(el("div",{style:"padding:22px 26px"},el("h1",{text:"Volume 3D (VR)"}),el("div",{class:"muted-c",text:"Nenhum volume disponível."}))); return; }
+  if(!vrSupported()){ p.append(el("div",{style:"padding:22px 26px"},el("h1",{text:"Volume 3D (VR)"}),
+    el("div",{class:"muted-c",text:"Este navegador não oferece WebGL2. Use Chrome, Edge, Firefox ou Safari atualizados. MPR e MIP continuam disponíveis."}))); return; }
+  let coarse=false; try{ coarse=matchMedia("(pointer:coarse)").matches; }catch(e){}
+  VR.reduced=coarse||(navigator.deviceMemory&&navigator.deviceMemory<4)||false;
+  const sel=el("select",{class:"mini",id:"vrSeries"}); volSeries.forEach((s,i)=>sel.append(el("option",{value:i,text:"Série "+(s.number||"")+" · "+(s.desc||"")+" ("+s.instances.length+" cortes)"})));
+  const qual=el("select",{class:"mini",id:"vrQuality"}); qual.append(el("option",{value:"0",text:"Resolução total"}),el("option",{value:"1",text:"Resolução reduzida"})); qual.value=VR.reduced?"1":"0";
+  const top=el("div",{class:"vr-top"},
+    el("div",{},el("div",{class:"ttl",text:"Volume 3D (VR)"}),el("div",{class:"muted-c",style:"font-size:11.5px",text:"Renderização volumétrica"})),
+    el("span",{style:"flex:1"}),sel,qual,
+    el("button",{class:"btn",text:"Salvar imagem",onclick:vrSnapshot}),
+    el("button",{class:"btn ghost",text:"Tela cheia",onclick:()=>{ const s=$("#vrStage"); if(!document.fullscreenElement){ const fn=s.requestFullscreen||s.webkitRequestFullscreen; if(fn) Promise.resolve(fn.call(s)).catch(()=>{}); } else if(document.exitFullscreen) document.exitFullscreen(); }}));
+  const stage=el("div",{class:"vr-stage",id:"vrStage"},el("canvas",{id:"vrCanvas"}),el("canvas",{id:"vrOverlay",class:"vr-ov"}),el("div",{class:"vr-msg hidden",id:"vrMsg"}));
+  const side=el("div",{class:"vr-side"});
+  const row=(label,id,min,max,val,fmt,cb)=>{ const v=el("span",{class:"val",id:id+"V",text:fmt(val)});
+    const r=el("input",{type:"range",id,min,max,value:val,oninput:e=>{ const n=parseFloat(e.target.value); v.textContent=fmt(n); cb(n); vrDirty(true); }});
+    return el("div",{class:"vr-row"},el("span",{style:"width:64px",text:label}),r,v); };
+  const modes=el("div",{class:"seg",id:"vrModes"});
+  VR_MODES.forEach((n,i)=>{ const b=el("button",{text:n,onclick:()=>{ VR.mode=i; vrSyncControls(); vrDirty(); }}); b.dataset.m=i; modes.append(b); });
+  const views=el("div",{class:"seg c3",id:"vrViews"});
+  Object.keys(VR_VIEWS).forEach(n=>{ const b=el("button",{text:n,onclick:()=>vrSetView(n)}); b.dataset.v=n; views.append(b); });
+  const clip=el("div",{id:"vrClip"});
+  side.append(el("h5",{text:"Modo"}),modes,
+    el("div",{id:"vrThrRow"},row("Limiar","vrThr",-300,1600,VR.thr,v=>v+" HU",v=>{ if(VR.mode===1) VR.thrS=v; else VR.thr=v; })),
+    el("div",{id:"vrOpRow"},row("Opacidade","vrOp",5,100,Math.round(VR.opac*100),v=>v+"%",v=>{ VR.opac=v/100; })),
+    el("div",{id:"vrSkinRow"},row("Partes moles","vrSkin",0,100,Math.round(VR.skin*100),v=>v+"%",v=>{ VR.skin=v/100; })),
+    el("div",{id:"vrWinRow"},row("WW","vrWW",1,4000,VR.ww,v=>String(v),v=>{ VR.ww=v; }),row("WL","vrWL",-1024,3071,VR.wl,v=>String(v),v=>{ VR.wl=v; })),
+    el("label",{class:"vr-row",id:"vrTableRow",style:"cursor:pointer;margin-top:9px;display:none"},
+      el("input",{type:"checkbox",id:"vrNoTable",checked:"",onchange:e=>{ VR.noTable=e.target.checked; if(VR.V3){ vrMsg("Preparando a imagem 3D…",1); setTimeout(()=>{ vrUpload(); vrMsg(null); vrDirty(); },30); } }}),
+      el("span",{style:"color:var(--text)",text:"Ocultar mesa do tomógrafo"})),
+    el("label",{class:"vr-row",style:"cursor:pointer"},
+      el("input",{type:"checkbox",id:"vrSmooth",checked:"",onchange:e=>{ VR.smooth=e.target.checked; if(VR.V3){ vrMsg("Preparando a imagem 3D…",1); setTimeout(()=>{ vrUpload(); vrMsg(null); vrDirty(); },30); } }}),
+      el("span",{style:"color:var(--text)",text:"Suavizar ruído"})),
+    el("h5",{text:"Vistas"}),views,
+    el("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:5px"},
+      el("button",{class:"btn ghost",id:"vrSpin",style:"height:28px;font-size:11px",text:"Girar",onclick:()=>vrSetSpin(!VR.spin)}),
+      el("button",{class:"btn ghost",style:"height:28px;font-size:11px",text:"Restaurar",onclick:vrReset})),
+    el("h5",{text:"Plano de corte"}),
+    row("Profund.","vrCut",0,100,0,v=>v?v+"%":"sem corte",v=>{ VR.cut=v/100; }),
+    el("h5",{text:"Recorte"}),clip,
+    el("div",{class:"vr-hint",text:"Arrastar: girar · Roda do mouse ou pinça: zoom · Shift + arrastar ou botão direito: mover · Duplo clique: centralizar"}));
+  p.append(top,el("div",{class:"vr-wrap"},stage,side));
+  vrWire(stage);
+  sel.onchange=()=>vrLoadSeries(volSeries[parseInt(sel.value,10)]);
+  qual.onchange=()=>{ VR.reduced=qual.value==="1"; if(VR.V3){ vrUpload(); vrBuildClip(); vrDirty(); } };
+  if(!VR._resize){ VR._resize=true; window.addEventListener("resize",()=>{ if(vrActive()) vrDirty(); }); }
+  p._built=true; VR.gl=null; VR.tex=null;
+  const cv=$("#vrCanvas");
+  try{ if(!vrSetupGL(cv)) throw new Error("WebGL2"); }
+  catch(e){ console.error(e); vrMsg("Não foi possível iniciar o Volume 3D nesta placa de vídeo."); return; }
+  // só reage ao contexto desta tela (um contexto antigo descartado não interfere)
+  cv.addEventListener("webglcontextlost",e=>{ e.preventDefault(); if(!VR.gl||VR.gl.canvas!==cv) return; VR.lost=true; vrMsg("A placa de vídeo reiniciou o Volume 3D. Ele volta sozinho em instantes."); });
+  cv.addEventListener("webglcontextrestored",()=>{ if(!VR.gl||VR.gl.canvas!==cv) return; VR.lost=false;
+    try{ vrSetupGL(cv); vrUpload(); vrMsg(null); vrDirty(); }catch(e){ vrMsg("Não foi possível retomar o Volume 3D. Recarregue a página."); } });
+  const pref=volSeries.find(s=>/bone/i.test(s.desc||""))||volSeries[0];
+  sel.value=String(volSeries.indexOf(pref));
+  vrLoadSeries(pref);
+}
+async function vrLoadSeries(s){
+  VR.series=s; VR.loading=true; vrSyncControls();
+  vrMsg("Carregando volume…",0);
+  let V3;
+  try{ V3=await buildVolume(s,(d,t)=>{ if(VR.series===s) vrMsg("Carregando volume… "+d+" / "+t,d/t); }); }
+  catch(e){ if(VR.series===s) vrMsg(esc(e.message||String(e))); return; }
+  if(VR.series!==s) return;
+  VR.V3=V3; VR.err=null;
+  vrMsg("Preparando a imagem 3D…",1); await new Promise(r=>setTimeout(r,30));
+  if(V3._tmask===undefined){ try{ V3._tmask=vrTableMask(V3); }catch(e){ V3._tmask=null; } }
+  VR.tmask=V3._tmask; const tb=$("#vrTableRow"); if(tb) tb.style.display=VR.tmask?"":"none";
+  try{ vrUpload(); }catch(e){ console.error(e); VR.err="Não foi possível enviar o volume para a placa de vídeo."; }
+  if(VR.err){ vrMsg(esc(VR.err)); return; }
+  const m0=s.instances[0].meta; VR.ww=Math.round(m0.windowWidth||2000); VR.wl=Math.round(m0.windowCenter!=null?m0.windowCenter:400);
+  VR.fit=vrBoneFit(V3); VR.clip=[0,1,0,1,0,1]; VR.cut=0; VR.loading=false;
+  vrBuildClip(); vrSyncControls(); vrMsg(null); vrSetView("Anterior");
+}
+function vrBuildClip(){
+  const box=$("#vrClip"); if(!box||!VR.axes) return; box.innerHTML="";
+  const order=[0,1,2].sort((a,b)=>VR.axes[a].idx-VR.axes[b].idx);
+  for(const a of order){ const ax=VR.axes[a];
+    const mk=(j,lab)=>el("input",{type:"range",min:0,max:100,value:Math.round(VR.clip[a*2+j]*100),"aria-label":lab,
+      oninput:e=>{ let v=parseFloat(e.target.value)/100; if(j===0) v=Math.min(v,VR.clip[a*2+1]-0.02); else v=Math.max(v,VR.clip[a*2]+0.02);
+        VR.clip[a*2+j]=clamp(v,0,1); e.target.value=Math.round(VR.clip[a*2+j]*100); vrDirty(true); }});
+    box.append(el("div",{style:"margin:6px 0 8px"},
+      el("div",{class:"vr-ends"},el("span",{text:ax.names[0]}),el("span",{text:ax.names[1]})),
+      el("div",{class:"vr-row"},el("span",{style:"width:36px",text:"início"}),mk(0,ax.names[0]+" início")),
+      el("div",{class:"vr-row"},el("span",{style:"width:36px",text:"fim"}),mk(1,ax.names[1]+" fim"))));
+  }
+}
+function vrSyncControls(){
+  $$("#vrModes button").forEach(b=>b.classList.toggle("on",parseInt(b.dataset.m,10)===VR.mode));
+  const show=(id,on)=>{ const n=$("#"+id); if(n) n.style.display=on?"":"none"; };
+  show("vrThrRow",VR.mode!==3); show("vrOpRow",VR.mode===0||VR.mode===2); show("vrSkinRow",VR.mode===2); show("vrWinRow",VR.mode===3);
+  const set=(id,v,txt)=>{ const r=$("#"+id); if(r){ r.value=v; const t=$("#"+id+"V"); if(t) t.textContent=txt; } };
+  const thr=VR.mode===1?VR.thrS:VR.thr; set("vrThr",thr,thr+" HU"); set("vrWW",VR.ww,String(VR.ww)); set("vrWL",VR.wl,String(VR.wl));
+}
+function vrReset(){
+  VR.mode=0; VR.thr=250; VR.thrS=300; VR.opac=0.9; VR.skin=0.35; VR.clip=[0,1,0,1,0,1]; VR.cut=0;
+  if(VR.series){ const m0=VR.series.instances[0].meta; VR.ww=Math.round(m0.windowWidth||2000); VR.wl=Math.round(m0.windowCenter!=null?m0.windowCenter:400); }
+  const c=$("#vrCut"); if(c){ c.value=0; $("#vrCutV").textContent="sem corte"; }
+  const o=$("#vrOp"); if(o){ o.value=90; $("#vrOpV").textContent="90%"; }
+  const k=$("#vrSkin"); if(k){ k.value=35; $("#vrSkinV").textContent="35%"; }
+  vrBuildClip(); vrSyncControls(); vrSetView("Anterior");
+}
+
+/* =====================================================================
    PÁGINA FOCO NO POLEGAR (estação dedicada à mão/punho)
    ===================================================================== */
 const THUMB={series:null,index:0,frame:null,zoom:3,ww:WINDOW_PRESETS[0].ww,wl:WINDOW_PRESETS[0].wl};
@@ -2571,8 +3498,8 @@ function renderThumb(){
 async function selectThumbSeries(s){ THUMB.series=s; THUMB.index=Math.floor(s.instances.length/2);
   const r=$("#thumbSlice"); r.max=s.instances.length-1; r.value=THUMB.index; await loadThumbInstance(); wireThumbLoupe(); }
 async function loadThumbInstance(){
-  const s=THUMB.series; const f=s.instances[THUMB.index]; const buf=await getBuf(f.id);
-  const fr=extractModality(f.meta,buf,0); if(!fr)return; THUMB.frame=fr;
+  const s=THUMB.series; const f=s.instances[THUMB.index];
+  const fr=await frameFor(f,0); if(!fr)return; THUMB.frame=fr;
   const lbl=$("#thumbSliceLbl"); if(lbl) lbl.textContent="Corte "+(THUMB.index+1)+" / "+s.instances.length;
   redrawThumbWindow();
   // dica inicial na lupa (antes do primeiro movimento do cursor)
@@ -2602,6 +3529,16 @@ function wireThumbLoupe(){ const cv=$("#thumbCanvas"); if(cv._wired)return; cv._
 /* =====================================================================
    INICIALIZAÇÃO
    ===================================================================== */
+// link direto para uma seção: ...#vr, #mpr, #laudo, #arquivos, #exportar...
+const HASH_VIEWS={visao:"overview",overview:"overview",visualizador:"viewer",viewer:"viewer",mpr:"mpr",mip:"mip",vr:"vr",volume:"vr",
+  mao:"thumb",punho:"thumb",midia:"media",imagens:"media",videos:"media",laudo:"reports",documentos:"reports",arquivos:"archive",
+  importar:"import",exportar:"export"};
+function openFromHash(){
+  const v=HASH_VIEWS[(location.hash||"").slice(1).toLowerCase()]||"overview";
+  if(v==="viewer"){ const all=APP.studies.flatMap(st=>st.series), s=all.find(x=>x.isVolume)||all.find(x=>x.kind==="dicom")||all[0];
+    if(s){ selectSeries(s); return; } }
+  setView(v);
+}
 async function boot(){
   captureEmbedded();   // antes de qualquer mudança no DOM
   // navegação do rail
@@ -2625,6 +3562,30 @@ async function boot(){
   initControls();
   buildToolbar();
 
+  // laudo/documentos escolhidos na página do laudo: entram sem sair da página
+  $("#pdfInput").addEventListener("change",async e=>{
+    const f=Array.from(e.target.files||[]); e.target.value=""; if(!f.length) return;
+    showLoading("Adicionando…",0);
+    const rep=await importFiles(f,(d,t)=>showLoading("Adicionando… "+d+" / "+t,d/t));
+    hideLoading();
+    if(rep){ const msg=rep.imported?(rep.shared?"Documento adicionado ao site.":"Documento adicionado neste dispositivo."):rep.duplicates?"Documento já adicionado.":"Não foi possível adicionar o documento.";
+      toast(msg,rep.failed?"warn":"ok",5000); }
+    if(currentView()==="reports") renderReports();
+  });
+
+  const mm=document.querySelector('meta[name="exam-manifest"]');
+  if(mm){   // modo site: exame publicado junto com a página
+    REMOTE.on=true; document.body.classList.add("remote");
+    showLoading("Carregando exame…",0.3);
+    try{ APP.db=await openDB(); }catch(e){ APP.db=null; }
+    try{ await loadRemoteExam(mm.getAttribute("content")); }
+    catch(e){ console.error(e); toast("Não foi possível carregar o exame.","err",9000); }
+    try{ await loadAllFromDB(); }catch(e){ console.error(e); }   // o que foi adicionado neste dispositivo
+    hideLoading(); renderSeriesList(); updateTopStatus(); APP.started=true;
+    openFromHash();
+    initShared();   // laudo e documentos guardados no site
+    return;
+  }
   try{ APP.db=await openDB(); }
   catch(e){ APP.db=null; toast("Armazenamento local indisponível neste navegador/modo. Os dados ficarão só na memória — use o backup .zip.","warn",9000); }
   try{ await loadAllFromDB(); }catch(e){ console.error(e); }
