@@ -3582,7 +3582,7 @@ async function boot(){
     catch(e){ console.error(e); toast("Não foi possível carregar o exame.","err",9000); }
     try{ await loadAllFromDB(); }catch(e){ console.error(e); }   // o que foi adicionado neste dispositivo
     hideLoading(); renderSeriesList(); updateTopStatus(); APP.started=true;
-    openFromHash();
+    openFromHash(); window.addEventListener("hashchange",openFromHash);
     initShared();   // laudo e documentos guardados no site
     return;
   }
