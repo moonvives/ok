@@ -4,9 +4,18 @@ Instrucoes de projeto para o Claude Code neste repositorio (`moonvives/ok`).
 
 ## Estado atual do repositorio
 
-Este repositorio **ainda nao tem codigo de aplicacao**. Em 2026-10-20 ele
-continha apenas o commit inicial (`Initialize repository`), um `.gitkeep`, e a
-configuracao do Claude Code descrita abaixo.
+A branch `main` **nao tem codigo de aplicacao**. Em 2026-10-20 ela continha
+apenas o commit inicial (`Initialize repository`) e um `.gitkeep`; esta
+configuracao do Claude Code e o primeiro conteudo acrescentado.
+
+Atencao: `main` estar vazia nao significa que o repositorio esteja inativo.
+Existem branches com codigo real, nao relacionado entre si, aguardando revisao
+(por exemplo: uma landing page, um app de fitness, um visualizador de imagens).
+Cada uma parte da mesma `main` vazia. Portanto:
+
+- O que vale para o seu trabalho e **a sua branch**, nao o repositorio em
+  abstrato. Nao presuma que o codigo de outra branch esta no seu checkout.
+- Nao presuma uma stack unica para o repositorio. Nao existe uma.
 
 Consequencia pratica, e a regra mais importante deste arquivo:
 
