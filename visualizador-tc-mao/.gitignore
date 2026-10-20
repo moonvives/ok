@@ -1,0 +1,13 @@
+# Arquivos do exame nunca entram no repositório
+*.zip
+*.dcm
+*.dicom
+DICOMDIR
+DICOM/
+*.pdf
+*.mp4
+*.webm
+*.mov
+# sites completos gerados (contêm o exame embutido); só o visualizador vazio é versionado
+*.html
+!index.html
