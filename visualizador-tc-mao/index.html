@@ -1,0 +1,2603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>Tomografia Computadorizada</title>
+<meta name="description" content="Tomografia computadorizada: imagens, reconstruções, vídeos e laudo.">
+<style>
+/* ============================================================
+   SISTEMA DE DESIGN — WORKSTATION DE RADIOLOGIA (DARK-FIRST)
+   ============================================================ */
+:root{
+  --bg:#080B10;            /* fundo primário */
+  --surface:#111722;       /* superfície secundária */
+  --panel:#18212D;         /* painéis elevados */
+  --panel-2:#1E2836;       /* painel mais alto */
+  --border:#273444;        /* bordas finas */
+  --border-soft:#1c2531;
+  --text:#F2F5F8;          /* texto primário */
+  --muted:#9AAABD;         /* texto secundário */
+  --muted-2:#6B7C91;
+  --accent:#4F9CF9;        /* seleção / foco */
+  --accent-2:#58D7D1;      /* medições diagnósticas */
+  --warn:#F2B84B;
+  --danger:#F26A6A;
+  --ok:#5AD19A;
+  --mono:"SFMono-Regular",ui-monospace,"JetBrains Mono",Menlo,Consolas,monospace;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --rail:56px;
+  --sidebar:272px;
+  --inspector:300px;
+  --topbar:48px;
+  --timeline:72px;
+  --radius:8px;
+  --shadow:0 8px 30px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0}
+body{
+  background:var(--bg);color:var(--text);font-family:var(--sans);
+  font-size:13px;line-height:1.45;overflow:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button{font-family:inherit;color:inherit;cursor:pointer}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#223042;border-radius:6px;border:2px solid var(--surface)}
+::-webkit-scrollbar-track{background:transparent}
+.hidden{display:none !important}
+.spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------- LAYOUT PRINCIPAL ---------- */
+#app{display:flex;flex-direction:column;height:100%}
+#topbar{
+  height:var(--topbar);flex:0 0 auto;display:flex;align-items:center;gap:12px;
+  padding:0 12px;background:linear-gradient(180deg,#121a26,#0e141d);
+  border-bottom:1px solid var(--border);z-index:30;
+}
+#topbar .brand{display:flex;align-items:center;gap:9px;font-weight:600;letter-spacing:.2px}
+#topbar .brand .logo{
+  width:26px;height:26px;border-radius:6px;display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--accent),#2f6fd0);color:#fff;font-weight:800;font-size:12px;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08) inset;
+}
+#topbar .exam-title{font-size:12.5px;color:var(--muted);font-weight:500;max-width:36vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#topbar .spacer{flex:1}
+.pill{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;
+  background:var(--panel);border:1px solid var(--border);font-size:11px;color:var(--muted);
+}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--muted-2)}
+.pill.ok .dot{background:var(--ok);box-shadow:0 0 6px var(--ok)}
+.pill.warn .dot{background:var(--warn)}
+.pill.off .dot{background:var(--accent-2);box-shadow:0 0 6px var(--accent-2)}
+.tbtn{
+  height:30px;padding:0 11px;border-radius:7px;border:1px solid var(--border);
+  background:var(--panel);color:var(--text);font-size:12px;display:inline-flex;align-items:center;gap:7px;
+  transition:.12s;
+}
+.tbtn:hover{background:var(--panel-2);border-color:#32455a}
+.tbtn.primary{background:linear-gradient(180deg,#2f6fd0,#2660bd);border-color:#3a74cf}
+.tbtn.primary:hover{filter:brightness(1.08)}
+.tbtn svg{width:15px;height:15px}
+
+#body{flex:1;display:flex;min-height:0}
+
+/* ---------- RAIL (navegação de seções) ---------- */
+#rail{
+  width:var(--rail);flex:0 0 auto;background:#0b1118;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:4px;z-index:20;
+}
+#rail .nav{
+  width:42px;height:42px;border-radius:9px;border:1px solid transparent;background:transparent;
+  display:grid;place-items:center;color:var(--muted-2);position:relative;transition:.12s;
+}
+#rail .nav:hover{color:var(--text);background:var(--panel)}
+#rail .nav.active{color:#fff;background:var(--panel-2);border-color:var(--border)}
+#rail .nav.active::before{content:"";position:absolute;left:-8px;top:9px;bottom:9px;width:3px;border-radius:3px;background:var(--accent)}
+#rail .nav svg{width:20px;height:20px}
+#rail .nav .tip{
+  position:absolute;left:50px;background:#0c1420;border:1px solid var(--border);color:var(--text);
+  padding:4px 8px;border-radius:6px;font-size:11px;white-space:nowrap;opacity:0;pointer-events:none;
+  transform:translateX(-4px);transition:.12s;z-index:50;box-shadow:var(--shadow)
+}
+#rail .nav:hover .tip{opacity:1;transform:translateX(0)}
+#rail .sep{width:28px;height:1px;background:var(--border);margin:6px 0}
+#rail .grow{flex:1}
+
+/* ---------- SIDEBAR ESQUERDA ---------- */
+#sidebar{
+  width:var(--sidebar);flex:0 0 auto;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;min-height:0;
+}
+.sb-head{padding:10px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sb-head h3{margin:0;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.sb-scroll{flex:1;overflow:auto;padding:6px}
+.series-card{
+  display:flex;gap:9px;padding:8px;border-radius:8px;border:1px solid transparent;margin-bottom:5px;
+  cursor:pointer;transition:.12s;align-items:center;
+}
+.series-card:hover{background:var(--panel);border-color:var(--border-soft)}
+.series-card.active{background:var(--panel-2);border-color:var(--accent)}
+.series-card .thumb{
+  width:52px;height:52px;border-radius:6px;background:#05080c;border:1px solid var(--border);
+  flex:0 0 auto;object-fit:cover;display:block;image-rendering:auto;
+}
+.series-card .meta{min-width:0;flex:1}
+.series-card .meta .t{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.series-card .meta .s{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.series-card .meta .badges{display:flex;gap:4px;margin-top:3px;flex-wrap:wrap}
+.tag{font-size:9.5px;padding:1.5px 6px;border-radius:5px;border:1px solid var(--border);color:var(--muted);background:#0d141d}
+.tag.dcm{color:#9fd0ff;border-color:#24435f}
+.tag.img{color:#b8e6c4;border-color:#275741}
+.tag.vid{color:#e9c8f5;border-color:#4b2c57}
+.tag.pdf{color:#ffd0a6;border-color:#5c3f22}
+.tag.vol{color:var(--accent-2);border-color:#235c58}
+.empty-note{padding:18px 14px;color:var(--muted-2);font-size:12px;text-align:center;line-height:1.6}
+
+/* ---------- ÁREA CENTRAL ---------- */
+#center{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;background:#05070a;position:relative}
+.view{display:none;flex:1;min-height:0;flex-direction:column}
+.view.active{display:flex}
+
+/* barra de ferramentas do viewer */
+#toolbar{
+  height:40px;flex:0 0 auto;display:flex;align-items:center;gap:3px;padding:0 8px;
+  background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;
+}
+.tool{
+  height:28px;min-width:28px;padding:0 7px;border-radius:6px;border:1px solid transparent;background:transparent;
+  color:var(--muted);display:inline-flex;align-items:center;gap:6px;font-size:11.5px;white-space:nowrap;transition:.1s
+}
+.tool:hover{color:var(--text);background:var(--panel)}
+.tool.active{color:#fff;background:var(--panel-2);border-color:var(--accent)}
+.tool svg{width:16px;height:16px}
+.tool-sep{width:1px;height:20px;background:var(--border);margin:0 4px;flex:0 0 auto}
+.tool-group{display:flex;align-items:center;gap:2px}
+select.mini,input.mini{
+  height:28px;background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;
+  font-size:11.5px;padding:0 7px;outline:none
+}
+select.mini:focus,input.mini:focus{border-color:var(--accent)}
+
+/* área do canvas */
+#stage{flex:1;position:relative;overflow:hidden;background:
+  radial-gradient(1200px 600px at 50% -10%,#0a111b 0,#05070a 60%)}
+.viewport{position:absolute;inset:0;display:grid;place-items:center}
+#mainCanvas,#overlayCanvas{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);touch-action:none}
+#overlayCanvas{pointer-events:none}
+.hud{position:absolute;font:11px/1.4 var(--mono);color:#cfe0f2;text-shadow:0 1px 2px #000;pointer-events:none;z-index:5}
+.hud.tl{top:8px;left:10px}
+.hud.tr{top:8px;right:10px;text-align:right}
+.hud.bl{bottom:8px;left:10px}
+.hud.br{bottom:8px;right:10px;text-align:right}
+.hud .k{color:var(--muted-2)}
+.hud .warnote{color:var(--warn)}
+#stageMsg{
+  position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);
+  padding:30px;z-index:8
+}
+#stageMsg .box{max-width:460px}
+#stageMsg h2{font-size:15px;color:var(--text);margin:0 0 8px}
+#stageMsg p{margin:6px 0;font-size:12.5px;line-height:1.6}
+.scrollbar-v{position:absolute;right:4px;top:10px;bottom:10px;width:4px;background:#121a24;border-radius:3px;z-index:6}
+.scrollbar-v .knob{position:absolute;left:-1px;width:6px;background:var(--accent);border-radius:3px;min-height:16px}
+
+/* ---------- INSPECTOR DIREITO ---------- */
+#inspector{
+  width:var(--inspector);flex:0 0 auto;background:var(--surface);border-left:1px solid var(--border);
+  display:flex;flex-direction:column;min-height:0
+}
+.insp-scroll{flex:1;overflow:auto}
+.insp-sec{border-bottom:1px solid var(--border)}
+.insp-sec > h4{
+  margin:0;padding:9px 12px;font-size:10.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);
+  display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none
+}
+.insp-sec > h4 .chev{transition:.15s;color:var(--muted-2)}
+.insp-sec.closed > h4 .chev{transform:rotate(-90deg)}
+.insp-sec .content{padding:4px 12px 12px}
+.insp-sec.closed .content{display:none}
+.kv{display:flex;justify-content:space-between;gap:10px;padding:3px 0;font-size:11.5px;border-bottom:1px dashed var(--border-soft)}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--muted);flex:0 0 auto}
+.kv .v{color:var(--text);text-align:right;font-family:var(--mono);word-break:break-all}
+.ww-row{display:flex;gap:8px;align-items:center;margin:6px 0}
+.ww-row label{width:36px;color:var(--muted);font-size:11px}
+.ww-row input[type=range]{flex:1}
+.preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:6px}
+.preset-grid button{
+  height:26px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:11px
+}
+.preset-grid button:hover{border-color:var(--accent)}
+.meas-item{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed var(--border-soft);font-size:11.5px}
+.meas-item .sw{width:9px;height:9px;border-radius:2px;flex:0 0 auto}
+.meas-item .mtxt{flex:1;min-width:0}
+.meas-item button{background:transparent;border:0;color:var(--muted-2);font-size:14px;padding:0 4px}
+.meas-item button:hover{color:var(--danger)}
+
+/* ---------- TIMELINE INFERIOR ---------- */
+#timeline{
+  height:var(--timeline);flex:0 0 auto;background:var(--surface);border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;padding:0 14px
+}
+#timeline .cine{display:flex;align-items:center;gap:4px}
+.cbtn{width:32px;height:32px;border-radius:7px;border:1px solid var(--border);background:var(--panel);display:grid;place-items:center;color:var(--text)}
+.cbtn:hover{border-color:var(--accent)}
+.cbtn svg{width:16px;height:16px}
+#timeline .track{flex:1;display:flex;flex-direction:column;gap:5px}
+#timeline .track .labels{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--muted)}
+#sliceRange{width:100%}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;height:4px;background:#1d2a3a;border-radius:3px;outline:none
+}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #0b1118;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--accent);border:2px solid #0b1118;cursor:pointer}
+
+/* ---------- SEÇÕES DE PÁGINA (overview, media, archive, etc) ---------- */
+.page{flex:1;overflow:auto;padding:22px 26px;background:
+  radial-gradient(900px 500px at 80% -10%,#0a111b 0,#05070a 55%)}
+.page h1{font-size:19px;margin:0 0 4px;font-weight:650}
+.page .sub{color:var(--muted);font-size:12.5px;margin-bottom:20px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:14px}
+.stat .n{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat .l{color:var(--muted);font-size:11.5px;margin-top:2px}
+.stat .l2{color:var(--muted-2);font-size:10.5px;margin-top:6px}
+.panel-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:16px}
+.panel-box h3{margin:0 0 10px;font-size:13.5px}
+.row-line{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px solid var(--border-soft);font-size:12.5px}
+.row-line:last-child{border-bottom:0}
+.row-line .v{font-family:var(--mono);color:var(--muted)}
+.ok-c{color:var(--ok)} .warn-c{color:var(--warn)} .danger-c{color:var(--danger)} .muted-c{color:var(--muted)}
+
+/* grade de mídia / miniaturas */
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.media-tile{background:var(--panel);border:1px solid var(--border);border-radius:9px;overflow:hidden;cursor:pointer;transition:.12s}
+.media-tile:hover{border-color:var(--accent);transform:translateY(-1px)}
+.media-tile .mt-thumb{aspect-ratio:1;background:#05080c;display:grid;place-items:center;overflow:hidden}
+.media-tile .mt-thumb img,.media-tile .mt-thumb canvas{width:100%;height:100%;object-fit:cover}
+.media-tile .mt-info{padding:8px 9px}
+.media-tile .mt-info .t{font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.media-tile .mt-info .s{font-size:10.5px;color:var(--muted);margin-top:2px}
+
+/* explorer / árvore */
+.tree{font-family:var(--mono);font-size:12px}
+.tnode{padding:4px 6px;border-radius:6px;display:flex;align-items:center;gap:8px}
+.tnode:hover{background:var(--panel)}
+.tnode.depth1{padding-left:22px}
+.tnode.depth2{padding-left:42px}
+.tnode .exp{width:14px;color:var(--muted-2)}
+.tnode .nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tnode .sz{color:var(--muted-2);font-size:11px}
+.tnode .dl{color:var(--accent);font-size:11px;cursor:pointer;opacity:0;transition:.1s}
+.tnode:hover .dl{opacity:1}
+
+/* dropzone / import */
+.dropzone{
+  border:1.5px dashed #33465c;border-radius:14px;padding:38px 24px;text-align:center;color:var(--muted);
+  background:#0a111b;transition:.15s;cursor:pointer
+}
+.dropzone.drag{border-color:var(--accent);background:#0e1a2a;color:var(--text)}
+.dropzone .big{font-size:15px;color:var(--text);margin:10px 0 4px}
+.progress{height:8px;background:#0e1620;border-radius:5px;overflow:hidden;border:1px solid var(--border)}
+.progress .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width .15s}
+
+/* toast */
+#loadingOverlay{position:fixed;inset:0;z-index:120;background:rgba(5,8,12,.92);display:grid;place-items:center}
+#loadingOverlay .lo-box{width:min(420px,86vw)}
+#loadingOverlay .lo-t{font-size:13px;color:var(--text);margin-bottom:10px;text-align:center}
+#toasts{position:fixed;bottom:88px;left:50%;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;gap:8px;align-items:center}
+.toast{background:#0c1521;border:1px solid var(--border);border-left:3px solid var(--accent);padding:10px 14px;border-radius:8px;font-size:12.5px;box-shadow:var(--shadow);max-width:80vw}
+.toast.ok{border-left-color:var(--ok)} .toast.warn{border-left-color:var(--warn)} .toast.err{border-left-color:var(--danger)}
+
+/* modal */
+#modal{position:fixed;inset:0;background:rgba(2,5,9,.7);backdrop-filter:blur(3px);z-index:90;display:none;place-items:center;padding:20px}
+#modal.open{display:grid}
+.modal-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;max-width:860px;width:100%;max-height:88vh;overflow:auto;box-shadow:var(--shadow)}
+.modal-card header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:12px}
+#btnSeries{display:none}
+/* telas até 1600px: ferramentas só com ícone (nome no tooltip) para caber tudo sem rolar */
+@media (max-width:1600px){ #toolbar .tool > span{display:none} }
+@media (max-width:820px){ #btnSeries{display:inline-flex} }
+.modal-card header h3{margin:0;flex:1;font-size:14px}
+.modal-card .mc-body{padding:18px}
+.modal-card .mc-body img,.modal-card .mc-body video,.modal-card .mc-body embed,.modal-card .mc-body iframe{max-width:100%;border-radius:8px;background:#000}
+
+.btn{height:32px;padding:0 14px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-size:12.5px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:linear-gradient(180deg,#2f6fd0,#2660bd);border-color:#3a74cf}
+.btn.ghost{background:transparent}
+.btn.danger{border-color:#5c2b2b;color:#ffc4c4}
+.btn.danger:hover{background:#2a1414}
+
+/* responsivo */
+@media (max-width:1100px){
+  :root{--inspector:0px}
+  #inspector{display:none}
+}
+@media (max-width:820px){
+  :root{--sidebar:0px}
+  #sidebar{position:absolute;left:var(--rail);top:0;bottom:0;width:260px;z-index:25;transform:translateX(-110%);transition:.2s;box-shadow:var(--shadow)}
+  #sidebar.open{transform:translateX(0)}
+  #topbar .exam-title{display:none}
+}
+@media (max-width:560px){
+  #timeline{height:64px;gap:8px;padding:0 8px}
+  .page{padding:16px 14px}
+  /* barra superior compacta: status fica na Visão geral; botões viram só ícone */
+  #topbar{gap:8px;padding:0 8px}
+  #topbar .pill{display:none}
+  #topbar .tbtn .lbl{display:none}
+  #topbar .brand{white-space:nowrap}
+  /* linha do tempo: prioriza o controle de cortes */
+  .cine-opts,.cbtn-ext{display:none !important}
+}
+#topbar{overflow:hidden}
+#topbar > *{flex-shrink:0}
+#topbar .exam-title,#topbar .spacer{flex-shrink:1;min-width:0}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- TOPO -->
+  <div id="topbar">
+    <button class="tbtn" id="btnSeries" title="Séries" aria-label="Abrir lista de séries">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <div class="brand">
+      <div class="logo">TC</div>
+      <div>
+        <div>Tomografia Computadorizada</div>
+      </div>
+    </div>
+    <div class="exam-title" id="examTitle"></div>
+    <div class="spacer"></div>
+    <button class="tbtn" id="btnImportTop">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>
+      <span class="lbl">Importar</span>
+    </button>
+    <button class="tbtn primary" id="btnExportTop" title="Backup">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></svg>
+      <span class="lbl">Backup</span>
+    </button>
+  </div>
+
+  <div id="body">
+    <!-- RAIL -->
+    <div id="rail">
+      <button class="nav active" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="tip">Visão geral</span></button>
+      <button class="nav" data-view="viewer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="12" cy="12" r="3.4"/></svg><span class="tip">Visualizador</span></button>
+      <button class="nav" data-view="mpr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9h18M9 3v18"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg><span class="tip">Multiplanar (MPR)</span></button>
+      <button class="nav" data-view="mip"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l9 5v10l-9 5-9-5V7z"/><path d="M12 12l9-5M12 12v10M12 12L3 7"/></svg><span class="tip">Reconstrução 3D</span></button>
+      <button class="nav" data-view="thumb"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11V6a2 2 0 0 1 4 0v5M5 11h11a2 2 0 0 1 2 2v3a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4z"/></svg><span class="tip">Punho e mão</span></button>
+      <div class="sep"></div>
+      <button class="nav" data-view="media"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M10 9l5 3-5 3z"/></svg><span class="tip">Vídeos e imagens</span></button>
+      <button class="nav" data-view="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15a0 0 0 0 1 0 0H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span class="tip">Laudo e documentos</span></button>
+      <button class="nav" data-view="archive"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h18v13H3z"/><path d="M3 7l2-4h14l2 4M10 12h4"/></svg><span class="tip">Arquivos do exame</span></button>
+      <div class="grow"></div>
+      <button class="nav" data-view="import"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg><span class="tip">Importar</span></button>
+      <button class="nav" data-view="export"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg><span class="tip">Exportar</span></button>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <div class="sb-head">
+        <h3>Estudos e séries</h3>
+        <button class="tool" id="btnReloadSeries" title="Atualizar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg></button>
+      </div>
+      <div class="sb-scroll" id="seriesList">
+        <div class="empty-note">Nenhuma série carregada.</div>
+      </div>
+    </div>
+
+    <!-- CENTRO -->
+    <div id="center">
+      <!-- VIEW: VISUALIZADOR -->
+      <div class="view active" data-view="viewer" id="view-viewer">
+        <div id="toolbar"></div>
+        <div id="stage">
+          <div class="viewport">
+            <canvas id="mainCanvas"></canvas>
+            <canvas id="overlayCanvas"></canvas>
+          </div>
+          <div class="hud tl" id="hudTL"></div>
+          <div class="hud tr" id="hudTR"></div>
+          <div class="hud bl" id="hudBL"></div>
+          <div class="hud br" id="hudBR"></div>
+          <div class="scrollbar-v hidden" id="sliceScroll"><div class="knob"></div></div>
+          <div id="stageMsg">
+            <div class="box">
+              <h2>Nenhuma imagem selecionada</h2>
+              <button class="btn primary" id="btnImportEmpty" style="margin-top:12px">Importar</button>
+            </div>
+          </div>
+        </div>
+        <div id="timeline">
+          <div class="cine">
+            <button class="cbtn cbtn-ext" id="btnFirst" title="Primeira"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6v12l-9-6z"/></svg></button>
+            <button class="cbtn" id="btnPrev" title="Anterior"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M15 6v12l-9-6z"/></svg></button>
+            <button class="cbtn" id="btnPlay" title="Reproduzir"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+            <button class="cbtn" id="btnNext" title="Próxima"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M9 6l9 6-9 6z"/></svg></button>
+            <button class="cbtn cbtn-ext" id="btnLast" title="Última"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l9 6-9 6z"/></svg></button>
+          </div>
+          <div class="track">
+            <div class="labels"><span id="sliceLabel">—</span><span id="cineFps"></span></div>
+            <input type="range" id="sliceRange" min="0" max="0" value="0" step="1">
+          </div>
+          <div class="cine-opts" style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:11px;color:var(--muted)">fps</span>
+            <input type="range" id="fpsRange" min="1" max="40" value="12" step="1" style="width:80px">
+            <label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px"><input type="checkbox" id="loopChk" checked>loop</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW: VISÃO GERAL -->
+      <div class="view" data-view="overview" id="view-overview"><div class="page" id="page-overview"></div></div>
+      <!-- VIEW: MPR -->
+      <div class="view" data-view="mpr" id="view-mpr"><div class="page" id="page-mpr"></div></div>
+      <!-- VIEW: MIP/3D -->
+      <div class="view" data-view="mip" id="view-mip"><div class="page" id="page-mip"></div></div>
+      <!-- VIEW: POLEGAR -->
+      <div class="view" data-view="thumb" id="view-thumb"><div class="page" id="page-thumb" style="padding:0;display:flex;flex-direction:column"></div></div>
+      <!-- VIEW: MÍDIA -->
+      <div class="view" data-view="media" id="view-media"><div class="page" id="page-media"></div></div>
+      <!-- VIEW: LAUDOS -->
+      <div class="view" data-view="reports" id="view-reports"><div class="page" id="page-reports"></div></div>
+      <!-- VIEW: ARQUIVO -->
+      <div class="view" data-view="archive" id="view-archive"><div class="page" id="page-archive"></div></div>
+      <!-- VIEW: IMPORTAR -->
+      <div class="view" data-view="import" id="view-import"><div class="page" id="page-import"></div></div>
+      <!-- VIEW: EXPORTAR -->
+      <div class="view" data-view="export" id="view-export"><div class="page" id="page-export"></div></div>
+    </div>
+
+    <!-- INSPECTOR -->
+    <div id="inspector">
+      <div class="insp-scroll" id="inspScroll">
+        <div class="insp-sec" id="secWindow">
+          <h4>Janela (Window / Level) <span class="chev">▾</span></h4>
+          <div class="content">
+            <div class="ww-row"><label>WW</label><input type="range" id="wwRange" min="1" max="4000" value="1500"><span id="wwVal" style="width:46px;text-align:right;font-family:var(--mono)">1500</span></div>
+            <div class="ww-row"><label>WL</label><input type="range" id="wlRange" min="-1024" max="3071" value="300"><span id="wlVal" style="width:46px;text-align:right;font-family:var(--mono)">300</span></div>
+            <div class="preset-grid" id="presetGrid"></div>
+          </div>
+        </div>
+        <div class="insp-sec" id="secMeta">
+          <h4>Metadados da imagem <span class="chev">▾</span></h4>
+          <div class="content" id="metaContent"><div class="empty-note" style="padding:8px">—</div></div>
+        </div>
+        <div class="insp-sec" id="secMeas">
+          <h4>Medições <span class="chev">▾</span></h4>
+          <div class="content" id="measContent"><div class="empty-note" style="padding:8px">Nenhuma medição.<br>Use as ferramentas na barra superior.</div></div>
+        </div>
+        <div class="insp-sec" id="secSeries">
+          <h4>Série <span class="chev">▾</span></h4>
+          <div class="content" id="seriesMetaContent"><div class="empty-note" style="padding:8px">—</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- entrada de arquivos -->
+<input type="file" id="fileInput" multiple class="hidden">
+<input type="file" id="folderInput" webkitdirectory directory multiple class="hidden">
+
+<div id="toasts"></div>
+<div id="modal"><div class="modal-card"><header><h3 id="modalTitle"></h3><button class="btn ghost" id="modalClose">Fechar</button></header><div class="mc-body" id="modalBody"></div></div></div>
+
+<!-- ============ MOTOR DO APLICATIVO (JS puro, sem dependências) ============ -->
+<script>
+"use strict";
+/* =====================================================================
+   ARQUIVO TC — Visualizador independente e offline (JavaScript puro)
+   Nenhuma dependência externa. Nenhuma conexão de rede. Tudo local.
+   ===================================================================== */
+const APP = {
+  db:null,
+  files:[],            // todos os ativos importados {id,name,size,type,kind,hash,buf,meta,...}
+  studies:[],          // hierarquia estudo->série->instâncias
+  current:{ series:null, index:0, image:null },
+  view:{ zoom:1, panX:0, panY:0, rotate:0, flipH:false, flipV:false, invert:false, ww:1500, wl:300 },
+  tool:"wwwl",
+  cine:{ playing:false, fps:12, loop:true, timer:null },
+  measurements:{},     // por imageId -> array
+  volumes:{},          // seriesId -> volume reslice
+  started:false,
+};
+
+/* ---------- atalhos DOM ---------- */
+const $  = (s,r=document)=>r.querySelector(s);
+const $$ = (s,r=document)=>Array.from(r.querySelectorAll(s));
+const el = (tag,props={},...kids)=>{
+  const n=document.createElement(tag);
+  for(const k in props){
+    if(k==="class") n.className=props[k];
+    else if(k==="html") n.innerHTML=props[k];
+    else if(k==="text") n.textContent=props[k];
+    else if(k.startsWith("on")&&typeof props[k]==="function") n.addEventListener(k.slice(2),props[k]);
+    else if(props[k]!=null) n.setAttribute(k,props[k]);
+  }
+  for(const c of kids){ if(c==null) continue; n.append(c.nodeType?c:document.createTextNode(c)); }
+  return n;
+};
+
+/* ---------- formatação ---------- */
+function fmtBytes(b){
+  if(b==null) return "—";
+  if(b<1024) return b+" B";
+  const u=["KB","MB","GB","TB"]; let i=-1,n=b;
+  do{ n/=1024; i++; }while(n>=1024&&i<u.length-1);
+  return n.toFixed(n<10?2:1)+" "+u[i];
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function clamp(v,a,b){ return v<a?a:v>b?b:v; }
+function nowStamp(){ return new Date().toISOString().replace(/[:.]/g,"-").slice(0,19); }
+
+/* ---------- toast ---------- */
+function toast(msg,type="",ms=3200){
+  const t=el("div",{class:"toast "+type,html:msg});
+  $("#toasts").append(t);
+  setTimeout(()=>{ t.style.opacity="0"; t.style.transition=".3s"; setTimeout(()=>t.remove(),320); }, ms);
+}
+
+/* ---------- modal ---------- */
+function openModal(title,node){
+  $("#modalTitle").textContent=title;
+  const body=$("#modalBody"); body.innerHTML="";
+  if(typeof node==="string") body.innerHTML=node; else body.append(node);
+  $("#modal").classList.add("open");
+}
+function closeModal(){ $("#modal").classList.remove("open"); $("#modalBody").innerHTML="";
+  if(APP._modalUrl){ URL.revokeObjectURL(APP._modalUrl); APP._modalUrl=null; } }
+
+/* ---------- navegação entre seções ---------- */
+function setView(name){
+  $$("#rail .nav").forEach(b=>b.classList.toggle("active",b.dataset.view===name));
+  $$("#center .view").forEach(v=>v.classList.toggle("active",v.dataset.view===name));
+  // o inspector (janela, metadados, medições) só se aplica ao visualizador principal
+  $("#inspector").style.display = name==="viewer" ? "" : "none";
+  if(name==="viewer" && V.frameCanvas) requestAnimationFrame(drawViewer);
+  if(name==="overview") renderOverview();
+  if(name==="media") renderMedia();
+  if(name==="reports") renderReports();
+  if(name==="archive") renderArchive();
+  if(name==="import") renderImportPage();
+  if(name==="export") renderExportPage();
+  if(name==="mpr") renderMPR();
+  if(name==="mip") renderMIP();
+  if(name==="thumb") renderThumb();
+  if(window.innerWidth<=820) $("#sidebar").classList.remove("open");
+}
+
+/* =====================================================================
+   SHA-256 — usa WebCrypto quando disponível; senão, implementação JS
+   (garante o relatório de integridade mesmo offline em file://)
+   ===================================================================== */
+async function sha256Hex(buf){
+  try{
+    if(crypto && crypto.subtle){
+      const d=await crypto.subtle.digest("SHA-256", buf);
+      return [...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,"0")).join("");
+    }
+  }catch(e){ /* cai para JS */ }
+  return sha256JS(new Uint8Array(buf));
+}
+function sha256JS(data){
+  function rrot(x,n){ return (x>>>n)|(x<<(32-n)); }
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const l=data.length, bitLen=l*8;
+  const withOne=l+1; const k=(56-withOne%64+64)%64;
+  const total=withOne+k+8;
+  const m=new Uint8Array(total); m.set(data); m[l]=0x80;
+  const dv=new DataView(m.buffer);
+  dv.setUint32(total-4, bitLen>>>0, false);
+  dv.setUint32(total-8, Math.floor(bitLen/0x100000000), false);
+  const w=new Uint32Array(64);
+  for(let i=0;i<total;i+=64){
+    for(let t=0;t<16;t++) w[t]=dv.getUint32(i+t*4,false);
+    for(let t=16;t<64;t++){
+      const s0=rrot(w[t-15],7)^rrot(w[t-15],18)^(w[t-15]>>>3);
+      const s1=rrot(w[t-2],17)^rrot(w[t-2],19)^(w[t-2]>>>10);
+      w[t]=(w[t-16]+s0+w[t-7]+s1)|0;
+    }
+    let [a,b,c,d,e,f,g,h]=H;
+    for(let t=0;t<64;t++){
+      const S1=rrot(e,6)^rrot(e,11)^rrot(e,25);
+      const ch=(e&f)^(~e&g);
+      const t1=(h+S1+ch+K[t]+w[t])|0;
+      const S0=rrot(a,2)^rrot(a,13)^rrot(a,22);
+      const maj=(a&b)^(a&c)^(b&c);
+      const t2=(S0+maj)|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+    }
+    H=[(H[0]+a)|0,(H[1]+b)|0,(H[2]+c)|0,(H[3]+d)|0,(H[4]+e)|0,(H[5]+f)|0,(H[6]+g)|0,(H[7]+h)|0];
+  }
+  return H.map(x=>(x>>>0).toString(16).padStart(8,"0")).join("");
+}
+
+/* ---------- CRC32 (para o gerador de ZIP de backup) ---------- */
+const CRC_TABLE=(()=>{ const t=new Uint32Array(256);
+  for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_TABLE[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+
+/* =====================================================================
+   INDEXEDDB — armazenamento local permanente dos arquivos originais
+   ===================================================================== */
+const DB_NAME="arquivo_tc_mao", DB_VER=1;
+function openDB(){
+  return new Promise((res,rej)=>{
+    let req;
+    try{ req=indexedDB.open(DB_NAME,DB_VER); }
+    catch(e){ return rej(e); }
+    req.onupgradeneeded=(ev)=>{
+      const db=ev.target.result;
+      if(!db.objectStoreNames.contains("files")) db.createObjectStore("files",{keyPath:"id"});
+      if(!db.objectStoreNames.contains("blobs")) db.createObjectStore("blobs");      // id -> ArrayBuffer original
+      if(!db.objectStoreNames.contains("meta"))  db.createObjectStore("meta");       // chave->valor (medições, config)
+    };
+    req.onsuccess=()=>res(req.result);
+    req.onerror=()=>rej(req.error);
+  });
+}
+// Reserva em memória: usada só se o navegador bloquear o IndexedDB (ex.: modo privado).
+// Nesse caso os dados duram até fechar a aba — o backup .zip continua funcionando.
+const MEM={files:new Map(),blobs:new Map(),meta:new Map()};
+function tx(store,mode="readonly"){ return APP.db.transaction(store,mode).objectStore(store); }
+function idbPut(store,val,key){
+  if(!APP.db){ MEM[store].set(key!==undefined?key:val.id,val); return Promise.resolve(); }
+  return new Promise((res,rej)=>{ const r=key!==undefined?tx(store,"readwrite").put(val,key):tx(store,"readwrite").put(val); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); });
+}
+function idbGet(store,key){
+  if(!APP.db) return Promise.resolve(MEM[store].get(key));
+  return new Promise((res,rej)=>{ const r=tx(store).get(key); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); });
+}
+function idbGetAll(store){
+  if(!APP.db) return Promise.resolve(Array.from(MEM[store].values()));
+  return new Promise((res,rej)=>{ const r=tx(store).getAll(); r.onsuccess=()=>res(r.result||[]); r.onerror=()=>rej(r.error); });
+}
+function idbDel(store,key){
+  if(!APP.db){ MEM[store].delete(key); return Promise.resolve(); }
+  return new Promise((res,rej)=>{ const r=tx(store,"readwrite").delete(key); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); });
+}
+function idbClear(store){
+  if(!APP.db){ MEM[store].clear(); return Promise.resolve(); }
+  return new Promise((res,rej)=>{ const r=tx(store,"readwrite").clear(); r.onsuccess=()=>res(); r.onerror=()=>rej(r.error); });
+}
+
+/* salva um ativo (registro leve em "files"; bytes originais em "blobs") */
+async function saveAsset(rec, buf){
+  await idbPut("files", rec);
+  if(buf) await idbPut("blobs", buf, rec.id);
+}
+async function getBuf(id){ return await idbGet("blobs", id); }
+
+/* carrega tudo do banco para a memória no início */
+async function loadAllFromDB(){
+  const recs=await idbGetAll("files");
+  APP.files=recs.sort((a,b)=>(a.name||"").localeCompare(b.name||""));
+  const meas=await idbGet("meta","measurements");
+  APP.measurements = meas||{};
+  buildHierarchy();
+}
+
+/* persistência de armazenamento (pede ao navegador para não apagar) */
+async function requestPersist(){
+  try{ if(navigator.storage&&navigator.storage.persist){ const g=await navigator.storage.persisted(); if(!g) await navigator.storage.persist(); } }catch(e){}
+}
+async function storageEstimate(){
+  try{ if(navigator.storage&&navigator.storage.estimate){ const e=await navigator.storage.estimate(); return e; } }catch(e){}
+  return null;
+}
+
+/* =====================================================================
+   LEITOR DICOM — JavaScript puro
+   Suporta: VR Explícito/Implícito, Little/Big Endian, nativo (não comprimido),
+   8/16 bits, com/sem sinal, multi-frame, MONOCHROME1/2 e RGB básico.
+   Sintaxes comprimidas são DETECTADAS e sinalizadas (bytes originais preservados).
+   ===================================================================== */
+const TS={
+  "1.2.840.10008.1.2":    {implicit:true, little:true,  name:"Implicit VR Little Endian"},
+  "1.2.840.10008.1.2.1":  {implicit:false,little:true,  name:"Explicit VR Little Endian"},
+  "1.2.840.10008.1.2.1.99":{implicit:false,little:true, name:"Deflated Explicit VR LE", deflated:true},
+  "1.2.840.10008.1.2.2":  {implicit:false,little:false, name:"Explicit VR Big Endian"},
+};
+const COMPRESSED_TS={
+  "1.2.840.10008.1.2.4.50":"JPEG Baseline",
+  "1.2.840.10008.1.2.4.51":"JPEG Extended",
+  "1.2.840.10008.1.2.4.57":"JPEG Lossless",
+  "1.2.840.10008.1.2.4.70":"JPEG Lossless SV1",
+  "1.2.840.10008.1.2.4.80":"JPEG-LS Lossless",
+  "1.2.840.10008.1.2.4.81":"JPEG-LS Near-Lossless",
+  "1.2.840.10008.1.2.4.90":"JPEG 2000 Lossless",
+  "1.2.840.10008.1.2.4.91":"JPEG 2000",
+  "1.2.840.10008.1.2.5":"RLE Lossless",
+  "1.2.840.10008.1.2.4.201":"HTJ2K Lossless",
+  "1.2.840.10008.1.2.4.202":"HTJ2K Lossless RPCL",
+  "1.2.840.10008.1.2.4.203":"HTJ2K",
+  // vídeo encapsulado em DICOM (usado por alguns sistemas para reconstruções 3D em movimento)
+  "1.2.840.10008.1.2.4.100":"Vídeo MPEG-2 em DICOM",
+  "1.2.840.10008.1.2.4.101":"Vídeo MPEG-2 (alta definição) em DICOM",
+  "1.2.840.10008.1.2.4.102":"Vídeo H.264 em DICOM",
+  "1.2.840.10008.1.2.4.103":"Vídeo H.264 (BD) em DICOM",
+  "1.2.840.10008.1.2.4.104":"Vídeo H.264 2D em DICOM",
+  "1.2.840.10008.1.2.4.105":"Vídeo H.264 3D em DICOM",
+  "1.2.840.10008.1.2.4.106":"Vídeo H.264 estéreo em DICOM",
+  "1.2.840.10008.1.2.4.107":"Vídeo HEVC em DICOM",
+  "1.2.840.10008.1.2.4.108":"Vídeo HEVC Main10 em DICOM",
+};
+const isVideoTS=uid=>/^1\.2\.840\.10008\.1\.2\.4\.10[0-8]$/.test(uid||"");
+const LONG_VR=new Set(["OB","OW","OF","OD","OL","SQ","UT","UN","UR","UC"]);
+
+function looksDicom(u8){
+  if(u8.length>132 && u8[128]===0x44&&u8[129]===0x49&&u8[130]===0x43&&u8[131]===0x4D) return true; // 'DICM'
+  // heurística: começa com group 0008 em LE (fallback p/ arquivos sem preâmbulo)
+  if(u8.length>8 && u8[0]===0x08 && u8[1]===0x00) return true;
+  return false;
+}
+
+function parseDicom(buffer){
+  const u8=new Uint8Array(buffer);
+  const dv=new DataView(buffer);
+  let pos=0;
+  const hasPreamble = u8.length>132 && u8[128]===0x44&&u8[129]===0x49&&u8[130]===0x43&&u8[131]===0x4D;
+  if(hasPreamble) pos=132;
+
+  const tags={}; // "ggggeeee" -> {vr,off,len}
+  // --- File Meta (group 0002) é sempre Explicit VR LE ---
+  let tsUID=null;
+  function readElementHeader(p, implicit, little){
+    const g=little?dv.getUint16(p,true):dv.getUint16(p,false);
+    const e=little?dv.getUint16(p+2,true):dv.getUint16(p+2,false);
+    let vr=null,len,hlen;
+    if(implicit){
+      len=little?dv.getUint32(p+4,true):dv.getUint32(p+4,false); hlen=8;
+    }else{
+      vr=String.fromCharCode(u8[p+4],u8[p+5]);
+      if(LONG_VR.has(vr)){ len=little?dv.getUint32(p+8,true):dv.getUint32(p+8,false); hlen=12; }
+      else{ len=little?dv.getUint16(p+6,true):dv.getUint16(p+6,false); hlen=8; }
+    }
+    return {g,e,vr,len,hlen};
+  }
+
+  // percorre File Meta até sair do grupo 0002
+  if(hasPreamble){
+    while(pos+8<=u8.length){
+      const h=readElementHeader(pos,false,true);
+      if(h.g!==0x0002) break;
+      const voff=pos+h.hlen;
+      const key=tagKey(h.g,h.e);
+      tags[key]={vr:h.vr,off:voff,len:h.len,little:true};
+      if(h.g===0x0002&&h.e===0x0010){ tsUID=readString(u8,voff,h.len); }
+      pos=voff+h.len;
+      if(h.len===0xFFFFFFFF) break;
+    }
+  }
+
+  // sem preâmbulo/File Meta: se os bytes 4–5 forem letras (um VR), é Explícito; senão, Implícito
+  let guessImplicit=false;
+  if(!hasPreamble){ const A=c=>c>=65&&c<=90; guessImplicit=!(A(u8[4])&&A(u8[5])); }
+  const tsInfo = (tsUID&&TS[tsUID]) ? TS[tsUID]
+    : {implicit:guessImplicit, little:true,
+       name:tsUID||(guessImplicit?"Implicit VR Little Endian (sem preâmbulo)":"Explicit VR Little Endian (presumido)")};
+  const compressedName = tsUID && COMPRESSED_TS[tsUID];
+  const implicit=tsInfo.implicit, little=tsInfo.little;
+
+  // Sequência de comprimento indefinido. Itens e delimitadores (grupo FFFE) têm sempre
+  // cabeçalho de 8 bytes; os elementos dentro dos itens seguem o VR do dataset.
+  function skipSeq(p){
+    while(p+8<=u8.length){
+      const g=dv.getUint16(p,little), e=dv.getUint16(p+2,little), len=dv.getUint32(p+4,little); p+=8;
+      if(g===0xFFFE&&e===0xE0DD) return p;                       // fim da sequência
+      if(g===0xFFFE&&e===0xE000){ p = len===0xFFFFFFFF ? skipItem(p) : p+len; }
+      else return u8.length;                                     // estrutura inesperada: para com segurança
+    }
+    return p;
+  }
+  function skipItem(p){
+    while(p+8<=u8.length){
+      const g=dv.getUint16(p,little), e=dv.getUint16(p+2,little);
+      if(g===0xFFFE){ const len=dv.getUint32(p+4,little); p+=8; if(e===0xE00D) return p; p+= len===0xFFFFFFFF?0:len; continue; }
+      const h=readElementHeader(p,implicit,little); p+=h.hlen;
+      p = h.len===0xFFFFFFFF ? skipSeq(p) : p+h.len;
+    }
+    return p;
+  }
+
+  let pixel={off:0,len:0,encapsulated:false,present:false};
+  let compressed = !!compressedName || !!tsInfo.deflated;
+
+  // --- Dataset principal ---
+  // Nas sintaxes comprimidas o cabeçalho continua em VR Explícito LE (só o pixel é
+  // encapsulado), então os metadados são lidos normalmente. Só o "deflated" não é lido.
+  if(!tsInfo.deflated){
+    while(pos+8<=u8.length){
+      let h;
+      try{ h=readElementHeader(pos,implicit,little); }catch(_){ break; }
+      const voff=pos+h.hlen;
+      if(h.g===0x7FE0 && h.e===0x0010){
+        if(h.len===0xFFFFFFFF){ pixel={off:voff,len:u8.length-voff,encapsulated:true,present:true}; compressed=true; }
+        else pixel={off:voff,len:h.len,encapsulated:false,present:true};
+        break; // pixel data é o último elemento de que precisamos
+      }
+      if(h.len===0xFFFFFFFF){ pos=skipSeq(voff); continue; }
+      if(!implicit && h.vr==="SQ"){ pos=voff+h.len; continue; }
+      tags[tagKey(h.g,h.e)]={vr:h.vr,off:voff,len:h.len,little};
+      pos=voff+h.len;
+      if(voff+h.len>u8.length) break;
+    }
+  }
+
+  // ---- extrai tags de interesse ----
+  const T=(g,e)=>tags[tagKey(g,e)];
+  const S=(g,e)=>{ const t=T(g,e); return t?readString(u8,t.off,t.len):null; };
+  const N=(g,e)=>{ const v=S(g,e); if(v==null||v==="") return null; const n=parseFloat(v); return isNaN(n)?null:n; };
+  const US=(g,e)=>{ const t=T(g,e); if(!t) return null; return t.little?dv.getUint16(t.off,true):dv.getUint16(t.off,false); };
+  const MULTI=(g,e)=>{ const v=S(g,e); return v==null?null:v.split("\\").map(x=>parseFloat(x)).filter(x=>!isNaN(x)); };
+
+  const meta={
+    transferSyntax: tsUID, isVideo: isVideoTS(tsUID),
+    transferSyntaxName: (compressedName?(isVideoTS(tsUID)?compressedName:compressedName+" (comprimido)"):tsInfo.name),
+    little, implicit, compressed, compressedReason: compressedName||(tsInfo.deflated?"Deflated dataset":null),
+    rows:US(0x0028,0x0010), cols:US(0x0028,0x0011),
+    bitsAllocated:US(0x0028,0x0100)||16, bitsStored:US(0x0028,0x0101)||16, highBit:US(0x0028,0x0102),
+    pixelRep:US(0x0028,0x0103)||0, samplesPerPixel:US(0x0028,0x0002)||1,
+    photometric:(S(0x0028,0x0004)||"MONOCHROME2").trim(), planar:US(0x0028,0x0006)||0,
+    numberOfFrames: parseInt(S(0x0028,0x0008)||"1",10)||1,
+    rescaleSlope: (N(0x0028,0x1053)!=null?N(0x0028,0x1053):1),
+    rescaleIntercept:(N(0x0028,0x1052)!=null?N(0x0028,0x1052):0),
+    windowCenter: firstNum(MULTI(0x0028,0x1050)),
+    windowWidth: firstNum(MULTI(0x0028,0x1051)),
+    pixelSpacing: MULTI(0x0028,0x0030),               // [linha, coluna] mm
+    sliceThickness: N(0x0018,0x0050),
+    spacingBetween: N(0x0018,0x0088),
+    ipp: MULTI(0x0020,0x0032),                        // ImagePositionPatient
+    iop: MULTI(0x0020,0x0037),                        // ImageOrientationPatient
+    instanceNumber: parseInt(S(0x0020,0x0013)||"0",10)||0,
+    sliceLocation: N(0x0020,0x1041),
+    studyUID:S(0x0020,0x000D), seriesUID:S(0x0020,0x000E), sopUID:S(0x0008,0x0018),
+    modality:(S(0x0008,0x0060)||"").trim(),
+    seriesNumber: parseInt(S(0x0020,0x0011)||"0",10)||0,
+    seriesDesc:(S(0x0008,0x103E)||"").trim(),
+    studyDesc:(S(0x0008,0x1030)||"").trim(),
+    studyDate:(S(0x0008,0x0020)||"").trim(),
+    bodyPart:(S(0x0018,0x0015)||"").trim(),
+    patientName:(S(0x0010,0x0010)||"").trim(),
+    patientID:(S(0x0010,0x0020)||"").trim(),
+    patientBirth:(S(0x0010,0x0030)||"").trim(),
+    patientSex:(S(0x0010,0x0040)||"").trim(),
+    manufacturer:(S(0x0008,0x0070)||"").trim(),
+    institution:(S(0x0008,0x0080)||"").trim(),
+    referringPhysician:(S(0x0008,0x0090)||"").replace(/\^/g," ").trim(),
+    accession:(S(0x0008,0x0050)||"").trim(),
+    studyTime:(S(0x0008,0x0030)||"").trim(),
+    stationName:(S(0x0008,0x1010)||"").trim(),
+    pixel, pixelOffset:pixel.off, pixelLength:pixel.len,
+  };
+  if(meta.highBit==null) meta.highBit=meta.bitsStored-1;
+  return meta;
+}
+
+function firstNum(arr){ return (arr&&arr.length)?arr[0]:null; }
+function tagKey(g,e){ return (g.toString(16).padStart(4,"0")+e.toString(16).padStart(4,"0")); }
+function readString(u8,off,len){
+  if(off+len>u8.length) len=Math.max(0,u8.length-off);
+  let s=""; for(let i=0;i<len;i++){ const c=u8[off+i]; if(c===0) break; s+=String.fromCharCode(c); }
+  return s.replace(/\s+$/,"").trim();
+}
+/* =====================================================================
+   EXTRAÇÃO E RENDERIZAÇÃO DE PIXELS DICOM
+   ===================================================================== */
+// retorna valores de modalidade (HU p/ TC) de um frame monocromático,
+// ou RGBA direto para imagens coloridas.
+function extractModality(meta, buffer, frameIndex=0){
+  const {rows,cols,bitsAllocated,pixelRep,samplesPerPixel,photometric,planar,
+         rescaleSlope,rescaleIntercept,pixel,little}=meta;
+  if(!pixel||!pixel.present||meta.compressed) return null;
+  const w=cols,h=rows; if(!w||!h) return null;
+  const bytesPP=bitsAllocated/8;
+  const frameSize=w*h*samplesPerPixel*bytesPP;
+  const base=pixel.off + frameIndex*frameSize;
+  if(base+frameSize>buffer.byteLength) return null;
+  const dv=new DataView(buffer);
+
+  if(samplesPerPixel>=3){ // COR (RGB/YBR tratado como RGB)
+    if(bitsAllocated!==8) return null;
+    const rgba=new Uint8ClampedArray(w*h*4);
+    for(let i=0;i<w*h;i++){
+      let r,g,b;
+      if(planar===0){ const o=base+i*3; r=dv.getUint8(o); g=dv.getUint8(o+1); b=dv.getUint8(o+2); }
+      else{ const pl=w*h; r=dv.getUint8(base+i); g=dv.getUint8(base+pl+i); b=dv.getUint8(base+2*pl+i); }
+      rgba[i*4]=r; rgba[i*4+1]=g; rgba[i*4+2]=b; rgba[i*4+3]=255;
+    }
+    return {color:true,width:w,height:h,rgba};
+  }
+
+  if(bitsAllocated!==8 && bitsAllocated!==16) return null; // 1 ou 32 bits: fora do escopo desta edição
+  const values=new Float32Array(w*h);
+  let min=Infinity,max=-Infinity;
+  const signed=pixelRep===1;
+  // Bits Stored < Bits Allocated (ex.: TC de 12 bits em 16): mascara bits extras e estende o sinal
+  const bs=clamp(meta.bitsStored||bitsAllocated,1,bitsAllocated);
+  const mask=(1<<bs)-1, signBit=1<<(bs-1), range=1<<bs;
+  for(let i=0;i<w*h;i++){
+    let r = bitsAllocated===8 ? dv.getUint8(base+i) : dv.getUint16(base+i*2,little);
+    r &= mask;
+    if(signed && (r & signBit)) r -= range;
+    const v=r*rescaleSlope+rescaleIntercept;
+    values[i]=v; if(v<min)min=v; if(v>max)max=v;
+  }
+  return {color:false,width:w,height:h,values,min,max,
+          mono1:photometric==="MONOCHROME1"};
+}
+
+// janela linear DICOM aplicada a um array de valores -> ImageData
+function windowToImageData(frame, ww, wl, invert){
+  const {width,height}=frame;
+  const out=new ImageData(width,height);
+  const d=out.data;
+  if(frame.color){
+    d.set(frame.rgba);
+    if(invert){ for(let i=0;i<d.length;i+=4){ d[i]=255-d[i]; d[i+1]=255-d[i+1]; d[i+2]=255-d[i+2]; } }
+    return out;
+  }
+  const v=frame.values;
+  ww=Math.max(1,ww);
+  const lo=wl-0.5-(ww-1)/2, span=(ww-1);
+  const inv = invert !== frame.mono1 ? true : false; // MONOCHROME1 inverte por padrão
+  for(let i=0;i<v.length;i++){
+    let g;
+    const x=v[i];
+    if(x<=lo) g=0; else if(x> lo+span) g=255; else g=((x-(wl-0.5))/span+0.5)*255;
+    if(inv) g=255-g;
+    const j=i*4; d[j]=d[j+1]=d[j+2]=g; d[j+3]=255;
+  }
+  return out;
+}
+
+// janela sugerida (WC/WW do DICOM, senão a partir dos dados)
+function suggestWindow(meta,frame){
+  if(meta && meta.windowWidth && meta.windowCenter!=null)
+    return {ww:meta.windowWidth, wl:meta.windowCenter};
+  if(frame && !frame.color && isFinite(frame.min) && isFinite(frame.max)){
+    const ww=Math.max(1,frame.max-frame.min); return {ww, wl:(frame.max+frame.min)/2};
+  }
+  return {ww:1500, wl:300};
+}
+
+// presets de janela clínicos (em HU)
+const WINDOW_PRESETS=[
+  {name:"Osso",ww:2000,wl:400},
+  {name:"Osso fino",ww:2500,wl:480},
+  {name:"Tec. mole",ww:400,wl:40},
+  {name:"Partes moles +",ww:350,wl:50},
+  {name:"Pulmão",ww:1500,wl:-600},
+  {name:"Cérebro",ww:80,wl:40},
+];
+
+// desenha um frame (mono+janela OU cor) para um canvas offscreen e retorna-o
+function frameToCanvas(frame, ww, wl, invert){
+  const c=document.createElement("canvas"); c.width=frame.width; c.height=frame.height;
+  const ctx=c.getContext("2d");
+  ctx.putImageData(windowToImageData(frame,ww,wl,invert),0,0);
+  return c;
+}
+
+/* =====================================================================
+   HIERARQUIA: Estudo -> Série -> Instância
+   ===================================================================== */
+function kindFromFile(name,mime){
+  const ext=(name.split(".").pop()||"").toLowerCase();
+  if(mime&&mime.startsWith("video/")) return "video";
+  if(["mp4","webm","mov","m4v","ogv","avi"].includes(ext)) return "video";
+  if(mime==="application/pdf"||ext==="pdf") return "pdf";
+  if(mime&&mime.startsWith("image/")) return "image";
+  if(["png","jpg","jpeg","gif","bmp","webp","tif","tiff"].includes(ext)) return "image";
+  if(ext==="dcm"||ext==="dicom"||ext==="ima") return "dicom";
+  return "other";
+}
+
+function buildHierarchy(){
+  APP.volumes={};   // a composição das séries pode ter mudado (nova importação): descarta volumes em cache
+  const studies=new Map();
+  function study(uid,desc,date,mod){
+    if(!studies.has(uid)) studies.set(uid,{uid,desc:desc||"",date:date||"",modality:mod||"",series:new Map()});
+    const s=studies.get(uid); if(desc&&!s.desc)s.desc=desc; if(date&&!s.date)s.date=date; if(mod&&!s.modality)s.modality=mod;
+    return s;
+  }
+  for(const f of APP.files){
+    // só DICOM com pixel vira série visível; DICOMDIR, laudos estruturados etc.
+    // ficam no Arquivo completo e no backup como "outros"
+    if(f.kind==="dicom"&&f.meta&&f.meta.pixel&&f.meta.pixel.present&&!f.meta.isVideo){
+      const m=f.meta;
+      const st=study(m.studyUID||"ESTUDO-UNICO", m.studyDesc, m.studyDate, m.modality);
+      const sk=m.seriesUID||("serie-"+(m.seriesNumber||0));
+      if(!st.series.has(sk)) st.series.set(sk,{id:"S_"+hashStr(st.uid+"|"+sk),uid:sk,number:m.seriesNumber,
+        desc:m.seriesDesc||("Série "+(m.seriesNumber||"")),modality:m.modality,kind:"dicom",instances:[]});
+      st.series.get(sk).instances.push(f);
+    }else if(f.kind==="image"){
+      const st=study("MIDIA-IMPORTADA","Imagens e mídia importadas","","");
+      const grp=f.folder||"Imagens";
+      const sk="img::"+grp;
+      if(!st.series.has(sk)) st.series.set(sk,{id:"S_"+hashStr(sk),uid:sk,number:0,desc:grp,modality:"IMG",kind:"image",instances:[]});
+      st.series.get(sk).instances.push(f);
+    }
+  }
+  // ordena instâncias DICOM por posição/instância e marca volumes
+  const out=[];
+  for(const st of studies.values()){
+    const sArr=[];
+    for(const s of st.series.values()){
+      if(s.kind==="dicom") sortDicomInstances(s);
+      else s.instances.sort((a,b)=>(a.name||"").localeCompare(b.name||"",undefined,{numeric:true}));
+      s.isVolume = s.kind==="dicom" && detectVolume(s);
+      // lista navegável: cada quadro de um DICOM multi-frame vira uma posição própria
+      s.frames=[];
+      for(const f of s.instances){
+        const n=(f.meta&&!f.meta.compressed&&f.meta.numberOfFrames>1)?f.meta.numberOfFrames:1;
+        for(let k=0;k<n;k++) s.frames.push({f,k});
+      }
+      sArr.push(s);
+    }
+    sArr.sort((a,b)=>(a.number||0)-(b.number||0));
+    out.push({...st,series:sArr});
+  }
+  out.sort((a,b)=>(a.uid==="MIDIA-IMPORTADA"?1:0)-(b.uid==="MIDIA-IMPORTADA"?1:0));
+  APP.studies=out;
+}
+
+function sortDicomInstances(s){
+  // normal do plano = produto vetorial das direções (IOP)
+  const iop=s.instances[0]&&s.instances[0].meta.iop;
+  let normal=null;
+  if(iop&&iop.length===6){ normal=[iop[1]*iop[5]-iop[2]*iop[4], iop[2]*iop[3]-iop[0]*iop[5], iop[0]*iop[4]-iop[1]*iop[3]]; }
+  s.instances.forEach(f=>{
+    const ipp=f.meta.ipp;
+    f._pos = (normal&&ipp&&ipp.length===3) ? (ipp[0]*normal[0]+ipp[1]*normal[1]+ipp[2]*normal[2])
+            : (f.meta.sliceLocation!=null?f.meta.sliceLocation:f.meta.instanceNumber);
+  });
+  s.instances.sort((a,b)=> (a._pos-b._pos) || (a.meta.instanceNumber-b.meta.instanceNumber));
+}
+
+// volume válido p/ MPR/MIP: muitos cortes, mesmas dimensões, espaçamento ~uniforme, mesma orientação
+function detectVolume(s){
+  const inst=s.instances; if(inst.length<8) return false;
+  const m0=inst[0].meta;
+  if(!m0.rows||!m0.cols||m0.compressed) return false;
+  if(m0.samplesPerPixel>1) return false;
+  for(const f of inst){ if(f.meta.rows!==m0.rows||f.meta.cols!==m0.cols||f.meta.compressed) return false; }
+  if(!m0.iop||m0.iop.length!==6) return false;
+  // espaçamento consistente
+  const gaps=[]; for(let i=1;i<inst.length;i++) gaps.push(Math.abs(inst[i]._pos-inst[i-1]._pos));
+  const valid=gaps.filter(g=>g>0.01);
+  if(valid.length<inst.length*0.6) return false;
+  const avg=valid.reduce((a,b)=>a+b,0)/valid.length;
+  if(!(avg>0)) return false;
+  const okUniform=valid.every(g=>Math.abs(g-avg)<avg*0.5);
+  s._sliceSpacing=avg;
+  return okUniform;
+}
+
+function hashStr(s){ let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h.toString(36); }
+
+/* ---------- SIDEBAR: lista de séries ---------- */
+function renderSeriesList(){
+  const box=$("#seriesList"); box.innerHTML="";
+  if(!APP.studies.length){
+    box.innerHTML='<div class="empty-note">Nenhuma série carregada ainda.<br><br>Abra <b>Importar</b> para adicionar os arquivos do seu exame.</div>';
+    return;
+  }
+  for(const st of APP.studies){
+    const head=el("div",{class:"sb-head",style:"border-bottom:0;padding:10px 10px 4px"},
+      el("h3",{text: st.uid==="MIDIA-IMPORTADA" ? "Imagens" : (st.desc||"Estudo")+(st.date?" · "+fmtDicomDate(st.date):"") }));
+    box.append(head);
+    for(const s of st.series){
+      const card=el("div",{class:"series-card",onclick:()=>selectSeries(s)});
+      card.dataset.sid=s.id;
+      const img=el("img",{class:"thumb",alt:""});
+      makeSeriesThumb(s).then(u=>{ if(u) img.src=u; });
+      const badges=el("div",{class:"badges"});
+      badges.append(el("span",{class:"tag "+(s.kind==="dicom"?"dcm":s.kind==="image"?"img":""),text:s.kind==="dicom"?(s.modality||"DICOM"):"IMG"}));
+      badges.append(el("span",{class:"tag",text:s.frames.length+(s.frames.length===1?" img":" imgs")}));
+      if(s.isVolume) badges.append(el("span",{class:"tag vol",text:"3D"}));
+      card.append(img, el("div",{class:"meta"},
+        el("div",{class:"t",text:s.desc||"Série"}),
+        el("div",{class:"s",text:(s.modality||"")+(s.number?(" · nº "+s.number):"")}),
+        badges));
+      box.append(card);
+    }
+  }
+  // marca ativa
+  if(APP.current.series){ const c=box.querySelector('[data-sid="'+APP.current.series.id+'"]'); if(c)c.classList.add("active"); }
+}
+function fmtDicomDate(d){ if(/^\d{8}$/.test(d)) return d.slice(6,8)+"/"+d.slice(4,6)+"/"+d.slice(0,4); return d; }
+
+async function makeSeriesThumb(s){
+  try{
+    const mid=s.instances[Math.floor(s.instances.length/2)];
+    if(s.kind==="image"){ return await thumbForImageFile(mid); }
+    const buf=await getBuf(mid.id); if(!buf) return null;
+    const frame=extractModality(mid.meta,buf,0); if(!frame) return null;
+    const win=suggestWindow(mid.meta,frame);
+    const c=frameToCanvas(frame,win.ww,win.wl,false);
+    const t=downscale(c,96); return t.toDataURL("image/jpeg",0.7);
+  }catch(e){ return null; }
+}
+async function thumbForImageFile(f){
+  try{ const buf=await getBuf(f.id); const blob=new Blob([buf],{type:f.type||"image/*"});
+    const bmp=await createImageBitmap(blob); const c=downscaleBitmap(bmp,96); return c.toDataURL("image/jpeg",0.7);
+  }catch(e){ return null; }
+}
+function downscale(src,max){ const r=Math.min(1,max/Math.max(src.width,src.height)); const c=document.createElement("canvas");
+  c.width=Math.max(1,Math.round(src.width*r)); c.height=Math.max(1,Math.round(src.height*r));
+  c.getContext("2d").drawImage(src,0,0,c.width,c.height); return c; }
+function downscaleBitmap(bmp,max){ const r=Math.min(1,max/Math.max(bmp.width,bmp.height)); const c=document.createElement("canvas");
+  c.width=Math.max(1,Math.round(bmp.width*r)); c.height=Math.max(1,Math.round(bmp.height*r));
+  c.getContext("2d").drawImage(bmp,0,0,c.width,c.height); return c; }
+
+/* =====================================================================
+   VISUALIZADOR — seleção, carregamento e renderização no canvas
+   ===================================================================== */
+const V={ frameCanvas:null, fit:1, matrix:null, imgBitmap:null };
+
+async function selectSeries(s){
+  stopCine();
+  APP.current.series=s; APP.current.index=Math.floor(s.frames.length/2);
+  APP.current.fresh=true;   // nova série: aplica janela sugerida e reseta zoom/pan uma única vez
+  $$("#seriesList .series-card").forEach(c=>c.classList.toggle("active",c.dataset.sid===s.id));
+  setView("viewer");
+  buildToolbar();
+  renderSeriesMeta(s);
+  await loadInstance(APP.current.index);   // loadInstance decide se mostra a imagem ou um aviso
+}
+
+async function loadInstance(i){
+  const s=APP.current.series; if(!s) return;
+  i=clamp(i,0,s.frames.length-1); APP.current.index=i;
+  const {f,k}=s.frames[i];
+  const fresh=APP.current.fresh; APP.current.fresh=false;
+  const tok=APP.current.loadTok=(APP.current.loadTok||0)+1;
+  const buf=await getBuf(f.id);
+  if(tok!==APP.current.loadTok) return;   // rolagem rápida: uma leitura mais nova já assumiu
+  APP.current.image=f; APP.current.frameNo=k;
+  V.imgBitmap=null; V.frameCanvas=null; APP.current.frame=null;
+
+  if(f.kind==="dicom"){
+    if(f.meta.isVideo){
+      showStageMsg("Vídeo","Disponível em Vídeos e imagens.");
+      updateHUD(); syncSliceUI(); renderMeta(f);
+      return;
+    }
+    if(f.meta.compressed){
+      showStageMsg("Imagem comprimida",esc(f.meta.transferSyntaxName)+". Disponível para download em Arquivos do exame.");
+      updateHUD(); syncSliceUI(); renderMeta(f);
+      return;
+    }
+    const frame=extractModality(f.meta,buf,k);
+    if(!frame){ showStageMsg("Imagem não exibível","Disponível para download em Arquivos do exame."); updateHUD(); syncSliceUI(); return; }
+    APP.current.frame=frame;
+    if(fresh){ // janela sugerida só ao abrir a série; depois, respeita o ajuste do usuário
+      const win=suggestWindow(f.meta,frame);
+      APP.view.ww=Math.round(win.ww); APP.view.wl=Math.round(win.wl);
+      syncWindowUI();
+    }
+    V.frameCanvas=frameToCanvas(frame,APP.view.ww,APP.view.wl,APP.view.invert);
+  }else if(f.kind==="image"){
+    try{ const blob=new Blob([buf],{type:f.type||"image/*"}); const bmp=await createImageBitmap(blob);
+      if(tok!==APP.current.loadTok) return;
+      V.imgBitmap=bmp; const c=document.createElement("canvas"); c.width=V.imgBitmap.width; c.height=V.imgBitmap.height;
+      c.getContext("2d").drawImage(V.imgBitmap,0,0); V.frameCanvas=c;
+    }catch(e){ showStageMsg("Imagem não exibível","Disponível para download em Arquivos do exame.");
+      updateHUD(); syncSliceUI(); return; }
+  }
+  $("#stageMsg").classList.add("hidden");
+  if(fresh) resetViewTransform(true);
+  drawViewer();
+  updateHUD();
+  renderMeta(f);
+  renderMeasList();
+  syncSliceUI();
+}
+
+function showStageMsg(title,html){
+  V.frameCanvas=null; drawViewer();   // limpa a imagem anterior para não ficar "fantasma" atrás do aviso
+  const m=$("#stageMsg"); m.classList.remove("hidden");
+  m.querySelector(".box").innerHTML="<h2>"+esc(title)+"</h2><p>"+html+"</p>";
+}
+
+function resetViewTransform(keepWindow){
+  APP.view.zoom=1; APP.view.panX=0; APP.view.panY=0; APP.view.rotate=0; APP.view.flipH=false; APP.view.flipV=false;
+  if(!keepWindow){ APP.view.invert=false; }
+}
+
+function stageSize(){ const st=$("#stage"); return {w:st.clientWidth, h:st.clientHeight}; }
+
+function drawViewer(){
+  const fc=V.frameCanvas; const cv=$("#mainCanvas"), ov=$("#overlayCanvas");
+  const {w:sw,h:sh}=stageSize(); const dpr=Math.min(window.devicePixelRatio||1,2);
+  for(const c of [cv,ov]){ c.style.width=sw+"px"; c.style.height=sh+"px"; c.width=Math.round(sw*dpr); c.height=Math.round(sh*dpr); }
+  const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,sw,sh);
+  if(!fc){ V.matrix=null; ov.getContext("2d").clearRect(0,0,ov.width,ov.height); return; }
+  const fw=fc.width, fh=fc.height;
+  V.fit=Math.min(sw/fw, sh/fh)*0.96;
+  const s=V.fit*APP.view.zoom;
+  const cx=sw/2+APP.view.panX, cy=sh/2+APP.view.panY;
+  const m=new DOMMatrix().translate(cx,cy).rotate(APP.view.rotate)
+        .scale((APP.view.flipH?-1:1)*s,(APP.view.flipV?-1:1)*s);
+  V.matrix=m; V.fw=fw; V.fh=fh;
+  ctx.imageSmoothingEnabled = APP.view.zoom<3;
+  ctx.save(); ctx.setTransform(m.a*dpr,m.b*dpr,m.c*dpr,m.d*dpr,m.e*dpr,m.f*dpr);
+  ctx.drawImage(fc,-fw/2,-fh/2,fw,fh); ctx.restore();
+  drawOverlay();
+}
+
+// imagem(px) -> tela(css)
+function imgToScreen(x,y){ const p=V.matrix.transformPoint(new DOMPoint(x-V.fw/2,y-V.fh/2)); return {x:p.x,y:p.y}; }
+function screenToImg(x,y){ const inv=V.matrix.inverse(); const p=inv.transformPoint(new DOMPoint(x,y)); return {x:p.x+V.fw/2,y:p.y+V.fh/2}; }
+
+/* ---------- HUD (cantos) ---------- */
+function updateHUD(){
+  const f=APP.current.image, s=APP.current.series; if(!f){ $("#hudTL").innerHTML=$("#hudTR").innerHTML=$("#hudBL").innerHTML=$("#hudBR").innerHTML=""; return; }
+  const m=f.meta||{};
+  $("#hudTL").innerHTML = s? (esc(s.desc||"Série")+"<br><span class='k'>"+esc(m.modality||f.kind.toUpperCase())+"</span>"):"";
+  $("#hudTR").innerHTML = "<span class='k'>Img</span> "+(APP.current.index+1)+"/"+s.frames.length+
+      (m.instanceNumber?("<br><span class='k'>nº</span> "+m.instanceNumber):"")+
+      (m.numberOfFrames>1?("<br><span class='k'>quadro</span> "+((APP.current.frameNo||0)+1)+"/"+m.numberOfFrames):"");
+  if(f.kind==="dicom" && !m.compressed){
+    $("#hudBL").innerHTML="<span class='k'>WW</span> "+APP.view.ww+"  <span class='k'>WL</span> "+APP.view.wl+
+      "<br><span class='k'>Zoom</span> "+(APP.view.zoom*100|0)+"%";
+    const ps=m.pixelSpacing;
+    $("#hudBR").innerHTML=(m.rows&&m.cols?(m.cols+"×"+m.rows):"")+
+      (ps?("<br><span class='k'>px</span> "+ps.map(x=>x.toFixed(3)).join("×")+" mm"):"");
+  }else{
+    $("#hudBL").innerHTML="<span class='k'>Zoom</span> "+(APP.view.zoom*100|0)+"%";
+    $("#hudBR").innerHTML=(V.frameCanvas?(V.frameCanvas.width+"×"+V.frameCanvas.height):"");
+  }
+}
+
+/* ---------- inspector: metadados da imagem ---------- */
+function renderMeta(f){
+  const box=$("#metaContent"); if(!f||!f.meta){ box.innerHTML="<div class='empty-note' style='padding:8px'>Sem metadados DICOM para este item.</div>"; return; }
+  const m=f.meta; const rows=[
+    ["Modalidade",m.modality],["Sintaxe",m.transferSyntaxName],
+    ["Dimensões",m.cols&&m.rows?(m.cols+" × "+m.rows):null],
+    ["Bits",m.bitsAllocated+" ("+(m.pixelRep?"com sinal":"sem sinal")+")"],
+    ["Fotométrico",m.photometric],["Frames",m.numberOfFrames],
+    ["Rescale",(m.rescaleSlope+" / "+m.rescaleIntercept)],
+    ["Esp. pixel",m.pixelSpacing?m.pixelSpacing.map(x=>x.toFixed(3)).join(" / ")+" mm":"—"],
+    ["Esp. de corte",m.sliceThickness!=null?m.sliceThickness+" mm":"—"],
+    ["Posição (IPP)",m.ipp?m.ipp.map(x=>x.toFixed(1)).join(", "):"—"],
+    ["Instância nº",m.instanceNumber],
+    ["Série UID",m.seriesUID],["SOP UID",m.sopUID],
+    ["Fabricante",m.manufacturer||"—"],["Região",m.bodyPart||"—"],
+  ];
+  box.innerHTML="";
+  for(const [k,v] of rows){ if(v==null||v==="")continue; box.append(el("div",{class:"kv"},el("span",{class:"k",text:k}),el("span",{class:"v",text:String(v)}))); }
+}
+function renderSeriesMeta(s){
+  const box=$("#seriesMetaContent"); const f0=s.instances[0], m=f0.meta||{};
+  const rows=[["Descrição",s.desc],["Modalidade",s.modality],["Nº série",s.number||"—"],
+    ["Arquivos",s.instances.length],["Imagens / quadros",s.frames.length],["Volume 3D",s.isVolume?"sim (MPR/MIP disponível)":"não"],
+    ["Data",m.studyDate?fmtDicomDate(m.studyDate):"—"]];
+  box.innerHTML=""; for(const[k,v]of rows){ if(v==null)continue; box.append(el("div",{class:"kv"},el("span",{class:"k",text:k}),el("span",{class:"v",text:String(v)}))); }
+}
+
+/* ---------- janela (window/level) UI ---------- */
+function syncWindowUI(){
+  $("#wwRange").value=APP.view.ww; $("#wlRange").value=APP.view.wl;
+  $("#wwVal").textContent=APP.view.ww; $("#wlVal").textContent=APP.view.wl;
+}
+function applyWindow(ww,wl){
+  APP.view.ww=Math.round(ww); APP.view.wl=Math.round(wl);
+  if(APP.current.frame){ V.frameCanvas=frameToCanvas(APP.current.frame,APP.view.ww,APP.view.wl,APP.view.invert); drawViewer(); }
+  syncWindowUI(); updateHUD();
+}
+function refreshFrameRender(){
+  if(APP.current.frame) V.frameCanvas=frameToCanvas(APP.current.frame,APP.view.ww,APP.view.wl,APP.view.invert);
+  drawViewer(); updateHUD();
+}
+function syncSliceUI(){
+  const s=APP.current.series; if(!s) return;
+  const r=$("#sliceRange"); r.max=s.frames.length-1; r.value=APP.current.index;
+  $("#sliceLabel").textContent="Corte "+(APP.current.index+1)+" / "+s.frames.length;
+}
+
+/* =====================================================================
+   BARRA DE FERRAMENTAS + INTERAÇÃO + MEDIÇÕES + CINE
+   ===================================================================== */
+const ICON={
+  wwwl:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none"/></svg>',
+  pan:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v20M2 12h20M7 7l5-5 5 5M7 17l5 5 5-5M17 7l5 5-5 5M7 7L2 12l5 5"/></svg>',
+  zoom:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>',
+  length:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20L20 4M5 15l4 4M9 11l4 4M13 7l4 4"/></svg>',
+  angle:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20h16M4 20L18 6M4 20a8 8 0 0 0 4-6"/></svg>',
+  rect:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="6" width="16" height="12" rx="1"/></svg>',
+  ellipse:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="12" rx="9" ry="6"/></svg>',
+  probe:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="2.5"/></svg>',
+  zin:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M11 8v6M8 11h6"/></svg>',
+  zout:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3M8 11h6"/></svg>',
+  fit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+  rot:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 1 1-2.6-6.4M21 3v6h-6"/></svg>',
+  fh:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M7 7l-4 5 4 5M17 7l4 5-4 5"/></svg>',
+  fv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h18M7 7l5-4 5 4M7 17l5 4 5-4"/></svg>',
+  inv:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" /><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" stroke="none"/></svg>',
+  reset:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.3 2.6L3 8M3 3v5h5"/></svg>',
+  trash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
+  full:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+};
+const TOOLS=[
+  {id:"wwwl",label:"Janela"},{id:"pan",label:"Mover"},{id:"zoom",label:"Zoom"},
+  {id:"length",label:"Distância"},{id:"angle",label:"Ângulo"},
+  {id:"rect",label:"ROI ▭"},{id:"ellipse",label:"ROI ◯"},{id:"probe",label:"Pixel"},
+];
+function buildToolbar(){
+  const tb=$("#toolbar"); tb.innerHTML="";
+  const g1=el("div",{class:"tool-group"});
+  for(const t of TOOLS){ const b=el("button",{class:"tool"+(APP.tool===t.id?" active":""),title:t.label,html:ICON[t.id]+"<span>"+t.label+"</span>",onclick:()=>setTool(t.id)}); b.dataset.tool=t.id; g1.append(b); }
+  tb.append(g1, el("div",{class:"tool-sep"}));
+  const act=[["zin","Ampliar",()=>{APP.view.zoom=clamp(APP.view.zoom*1.2,0.1,20);drawViewer();updateHUD();}],
+    ["zout","Reduzir",()=>{APP.view.zoom=clamp(APP.view.zoom/1.2,0.1,20);drawViewer();updateHUD();}],
+    ["fit","Ajustar",()=>{resetViewTransform(true);drawViewer();updateHUD();}],
+    ["rot","Girar 90°",()=>{APP.view.rotate=(APP.view.rotate+90)%360;drawViewer();}],
+    ["fh","Espelhar H",()=>{APP.view.flipH=!APP.view.flipH;drawViewer();}],
+    ["fv","Espelhar V",()=>{APP.view.flipV=!APP.view.flipV;drawViewer();}],
+    ["inv","Inverter tons",()=>{APP.view.invert=!APP.view.invert;refreshFrameRender();}],
+    ["reset","Restaurar",()=>{resetViewTransform(false);refreshFrameRender();}]];
+  const g2=el("div",{class:"tool-group"});
+  for(const[ic,lb,fn]of act) g2.append(el("button",{class:"tool",title:lb,html:ICON[ic],onclick:fn}));
+  tb.append(g2, el("div",{class:"tool-sep"}));
+  const sel=el("select",{class:"mini",onchange:e=>{const p=WINDOW_PRESETS[e.target.value];if(p)applyWindow(p.ww,p.wl);}});
+  sel.append(el("option",{value:"",text:"Presets de janela…"}));
+  WINDOW_PRESETS.forEach((p,i)=>sel.append(el("option",{value:i,text:p.name+"  ("+p.ww+"/"+p.wl+")"})));
+  tb.append(sel);
+  tb.append(el("button",{class:"tool",title:"Limpar medições",html:ICON.trash+"<span>Limpar</span>",onclick:clearMeas}));
+  tb.append(el("div",{style:"flex:1"}));
+  tb.append(el("button",{class:"tool",title:"Tela cheia",html:ICON.full,onclick:toggleFull}));
+}
+function setTool(id){ APP.tool=id; $$("#toolbar .tool[data-tool]").forEach(b=>b.classList.toggle("active",b.dataset.tool===id)); V.draft=null; drawOverlay(); }
+function toggleFull(){ const s=$("#stage"); if(!document.fullscreenElement){ (s.requestFullscreen||s.webkitRequestFullscreen||(()=>{})).call(s); } else document.exitFullscreen&&document.exitFullscreen(); }
+
+/* ---------- medições: persistência + helpers ---------- */
+// medições são guardadas por imagem E quadro (multi-frame tem medições independentes por quadro)
+function measKey(){ const f=APP.current.image; if(!f)return null; const k=APP.current.frameNo||0; return k?(f.id+"#"+k):f.id; }
+function getMeas(){ const id=measKey(); if(!id)return[]; return APP.measurements[id]||(APP.measurements[id]=[]); }
+async function persistMeas(){ try{ await idbPut("meta",APP.measurements,"measurements"); }catch(e){} }
+function clearMeas(){ const id=measKey(); if(!id)return; APP.measurements[id]=[]; persistMeas(); drawOverlay(); renderMeasList(); }
+function addMeas(mo){ getMeas().push(mo); persistMeas(); drawOverlay(); renderMeasList(); }
+
+function pxMM(){ const m=APP.current.image&&APP.current.image.meta; if(m&&m.pixelSpacing&&m.pixelSpacing.length>=2) return {row:m.pixelSpacing[0],col:m.pixelSpacing[1]}; return null; }
+function lengthLabel(p1,p2){
+  const mm=pxMM(); const dx=p2.x-p1.x, dy=p2.y-p1.y;
+  if(mm){ const d=Math.sqrt((dx*mm.col)**2+(dy*mm.row)**2); return d.toFixed(1)+" mm"; }
+  return Math.sqrt(dx*dx+dy*dy).toFixed(0)+" px";
+}
+function angleLabel(a,b,c){ // ângulo no vértice b
+  const v1={x:a.x-b.x,y:a.y-b.y}, v2={x:c.x-b.x,y:c.y-b.y};
+  let ang=Math.abs(Math.atan2(v1.x*v2.y-v1.y*v2.x, v1.x*v2.x+v1.y*v2.y)*180/Math.PI);
+  if(ang>180)ang=360-ang; return ang.toFixed(1)+"°";
+}
+function roiStats(type,p1,p2){
+  const fr=APP.current.frame; const mm=pxMM();
+  let x0=Math.min(p1.x,p2.x),x1=Math.max(p1.x,p2.x),y0=Math.min(p1.y,p2.y),y1=Math.max(p1.y,p2.y);
+  x0=clamp(Math.round(x0),0,(fr?fr.width:1)-1); x1=clamp(Math.round(x1),0,(fr?fr.width:1)-1);
+  y0=clamp(Math.round(y0),0,(fr?fr.height:1)-1); y1=clamp(Math.round(y1),0,(fr?fr.height:1)-1);
+  const cx=(x0+x1)/2, cy=(y0+y1)/2, rx=(x1-x0)/2||1, ry=(y1-y0)/2||1;
+  let n=0,sum=0,min=Infinity,max=-Infinity;
+  if(fr&&!fr.color){
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){
+      if(type==="ellipse"){ const nx=(x-cx)/rx, ny=(y-cy)/ry; if(nx*nx+ny*ny>1) continue; }
+      const v=fr.values[y*fr.width+x]; n++; sum+=v; if(v<min)min=v; if(v>max)max=v;
+    }
+  }
+  const areaPx=(type==="ellipse")?(Math.PI*rx*ry):((x1-x0)*(y1-y0));
+  let area; if(mm){ area=(type==="ellipse"?Math.PI*rx*mm.col*ry*mm.row:(x1-x0)*mm.col*(y1-y0)*mm.row); area=(area/100).toFixed(2)+" cm²"; }
+  else area=Math.round(areaPx)+" px²";
+  const unit=(fr&&!fr.color&&APP.current.image.kind==="dicom")?" HU":"";
+  const mean=n?(sum/n):0;
+  return {text:(n?("μ "+mean.toFixed(0)+unit+"  ·  "+area):area), detail:n?("min "+min.toFixed(0)+" / max "+max.toFixed(0)+unit):""};
+}
+
+/* ---------- desenho da sobreposição (medições) ---------- */
+function drawOverlay(){
+  const ov=$("#overlayCanvas"); if(!ov) return; const dpr=Math.min(window.devicePixelRatio||1,2);
+  const ctx=ov.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,ov.width,ov.height);
+  if(!V.matrix) return;
+  const list=getMeas().slice(); if(V.draft) list.push(V.draft);
+  ctx.lineWidth=1.4; ctx.font="12px var(--mono),monospace";
+  for(const m of list){
+    ctx.strokeStyle=m.color||"#58D7D1"; ctx.fillStyle=m.color||"#58D7D1";
+    const P=m.pts.map(p=>imgToScreen(p.x,p.y));
+    if(m.type==="length"&&P.length>=2){
+      line(ctx,P[0],P[1]); handle(ctx,P[0]); handle(ctx,P[1]);
+      label(ctx,mid(P[0],P[1]),lengthLabel(m.pts[0],m.pts[1]));
+    }else if(m.type==="angle"&&P.length>=2){
+      line(ctx,P[1],P[0]); if(P[2]) line(ctx,P[1],P[2]); P.forEach(p=>handle(ctx,p));
+      if(P.length>=3) label(ctx,P[1],angleLabel(m.pts[0],m.pts[1],m.pts[2]));
+    }else if((m.type==="rect"||m.type==="ellipse")&&P.length>=2){
+      drawROI(ctx,m.type,m.pts[0],m.pts[1]);
+      const st=roiStats(m.type,m.pts[0],m.pts[1]);
+      label(ctx,imgToScreen(Math.min(m.pts[0].x,m.pts[1].x),Math.min(m.pts[0].y,m.pts[1].y)),st.text,st.detail);
+    }else if(m.type==="probe"&&P.length>=1){
+      handle(ctx,P[0]); label(ctx,P[0],m.txt||"");
+    }
+  }
+}
+function line(ctx,a,b){ ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); }
+function handle(ctx,p){ ctx.beginPath(); ctx.arc(p.x,p.y,3,0,7); ctx.stroke(); }
+function mid(a,b){ return {x:(a.x+b.x)/2,y:(a.y+b.y)/2}; }
+function label(ctx,p,txt,det){ if(!txt)return; ctx.save(); const pad=4; ctx.font="12px monospace";
+  const w=Math.max(ctx.measureText(txt).width, det?ctx.measureText(det).width:0)+pad*2;
+  const h=det?30:16; ctx.fillStyle="rgba(5,10,16,.8)"; ctx.fillRect(p.x+6,p.y-h-2,w,h);
+  ctx.fillStyle="#cdeef0"; ctx.fillText(txt,p.x+6+pad,p.y-h+10);
+  if(det){ ctx.fillStyle="#8fb7bb"; ctx.fillText(det,p.x+6+pad,p.y-h+24); } ctx.restore(); }
+function drawROI(ctx,type,a,b){
+  if(type==="rect"){ const c=[{x:a.x,y:a.y},{x:b.x,y:a.y},{x:b.x,y:b.y},{x:a.x,y:b.y}].map(p=>imgToScreen(p.x,p.y));
+    ctx.beginPath(); ctx.moveTo(c[0].x,c[0].y); for(let i=1;i<4;i++)ctx.lineTo(c[i].x,c[i].y); ctx.closePath(); ctx.stroke(); }
+  else{ const cx=(a.x+b.x)/2,cy=(a.y+b.y)/2,rx=Math.abs(b.x-a.x)/2,ry=Math.abs(b.y-a.y)/2;
+    ctx.beginPath(); for(let i=0;i<=48;i++){ const t=i/48*2*Math.PI; const p=imgToScreen(cx+rx*Math.cos(t),cy+ry*Math.sin(t)); i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);} ctx.closePath(); ctx.stroke(); }
+}
+
+/* ---------- lista de medições no inspector ---------- */
+function renderMeasList(){
+  const box=$("#measContent"); const list=getMeas();
+  if(!list.length){ box.innerHTML="<div class='empty-note' style='padding:8px'>Nenhuma medição.<br>Use as ferramentas na barra superior.</div>"; return; }
+  box.innerHTML="";
+  list.forEach((m,i)=>{
+    let txt="";
+    if(m.type==="length")txt="Distância · "+lengthLabel(m.pts[0],m.pts[1]);
+    else if(m.type==="angle"&&m.pts.length>=3)txt="Ângulo · "+angleLabel(m.pts[0],m.pts[1],m.pts[2]);
+    else if(m.type==="rect"||m.type==="ellipse"){const s=roiStats(m.type,m.pts[0],m.pts[1]);txt=(m.type==="rect"?"ROI ▭ · ":"ROI ◯ · ")+s.text;}
+    else if(m.type==="probe")txt="Pixel · "+(m.txt||"");
+    const it=el("div",{class:"meas-item"},el("span",{class:"sw",style:"background:"+(m.color||"#58D7D1")}),
+      el("span",{class:"mtxt",text:txt}),el("button",{title:"Remover",text:"✕",onclick:()=>{list.splice(i,1);persistMeas();drawOverlay();renderMeasList();}}));
+    box.append(it);
+  });
+}
+
+/* =====================================================================
+   INTERAÇÃO: ponteiro, roda, cine, teclado, controles
+   ===================================================================== */
+function relPos(ev){ const r=$("#stage").getBoundingClientRect(); return {x:ev.clientX-r.left, y:ev.clientY-r.top}; }
+
+function initViewerInteraction(){
+  const stage=$("#stage");
+  let drag=null, angleState=null;
+  // gesto de pinça (dois dedos) para zoom em tablets/celulares
+  const touches=new Map(); let pinch=null;
+  const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+
+  stage.addEventListener("pointerdown",ev=>{
+    if(!V.frameCanvas||!V.matrix) return; stage.setPointerCapture(ev.pointerId);
+    const p=relPos(ev);
+    if(ev.pointerType==="touch"){
+      touches.set(ev.pointerId,p);
+      if(touches.size===2){ const [a,b]=[...touches.values()]; pinch={d:Math.max(1,dist(a,b)),z:APP.view.zoom}; drag=null; V.draft=null; drawOverlay(); return; }
+    }
+    const ip=screenToImg(p.x,p.y);
+    const t=APP.tool;
+    if(t==="wwwl") drag={t,sx:p.x,sy:p.y,ww:APP.view.ww,wl:APP.view.wl};
+    else if(t==="pan") drag={t,sx:p.x,sy:p.y,px:APP.view.panX,py:APP.view.panY};
+    else if(t==="zoom") drag={t,sy:p.y,z:APP.view.zoom};
+    else if(t==="length"){ V.draft={type:"length",pts:[ip,{...ip}],color:"#58D7D1"}; drag={t}; }
+    else if(t==="rect"){ V.draft={type:"rect",pts:[ip,{...ip}],color:"#4F9CF9"}; drag={t}; }
+    else if(t==="ellipse"){ V.draft={type:"ellipse",pts:[ip,{...ip}],color:"#5AD19A"}; drag={t}; }
+    else if(t==="probe"){ drag={t}; updateProbe(ip); }
+    else if(t==="angle"){
+      if(!angleState){ angleState=[ip]; V.draft={type:"angle",pts:[ip,{...ip}],color:"#F2B84B"}; }
+      else if(angleState.length===1){ angleState.push(ip); V.draft={type:"angle",pts:[angleState[0],ip,{...ip}],color:"#F2B84B"}; }
+      else { angleState.push(ip); addMeas({type:"angle",pts:angleState.slice(),color:"#F2B84B"}); angleState=null; V.draft=null; }
+      drawOverlay(); return;
+    }
+    drawOverlay();
+  });
+
+  stage.addEventListener("pointermove",ev=>{
+    if(!V.matrix) return;   // nenhuma imagem carregada ainda
+    const p=relPos(ev);
+    if(touches.has(ev.pointerId)) touches.set(ev.pointerId,p);
+    if(pinch&&touches.size===2){ const [a,b]=[...touches.values()];
+      APP.view.zoom=clamp(pinch.z*dist(a,b)/pinch.d,0.1,20); drawViewer(); updateHUD(); return; }
+    const ip=screenToImg(p.x,p.y);
+    if(APP.tool==="angle"&&angleState){
+      if(angleState.length===1) V.draft.pts[1]=ip; else if(angleState.length===2) V.draft.pts[2]=ip;
+      drawOverlay(); return;
+    }
+    if(!drag) return;
+    const t=drag.t;
+    if(t==="wwwl"){ applyWindow(Math.max(1,drag.ww+(p.x-drag.sx)*2), drag.wl+(p.y-drag.sy)*2); }
+    else if(t==="pan"){ APP.view.panX=drag.px+(p.x-drag.sx); APP.view.panY=drag.py+(p.y-drag.sy); drawViewer(); updateHUD(); }
+    else if(t==="zoom"){ APP.view.zoom=clamp(drag.z*(1+(drag.sy-p.y)/200),0.1,20); drawViewer(); updateHUD(); }
+    else if(t==="length"||t==="rect"||t==="ellipse"){ V.draft.pts[1]=ip; drawOverlay(); }
+    else if(t==="probe"){ updateProbe(ip); }
+  });
+
+  const endTouch=ev=>{ touches.delete(ev.pointerId); if(touches.size<2) pinch=null; };
+  stage.addEventListener("pointercancel",ev=>{ endTouch(ev); drag=null; if(V.draft&&APP.tool!=="angle"){V.draft=null;drawOverlay();} });
+  stage.addEventListener("pointerup",ev=>{
+    endTouch(ev);
+    if(drag&&V.draft&&["length","rect","ellipse"].includes(drag.t)){
+      const a=V.draft.pts[0],b=V.draft.pts[1];
+      if(Math.hypot(b.x-a.x,b.y-a.y)>2) addMeas(V.draft);
+      V.draft=null; drawOverlay();
+    }
+    if(drag&&drag.t==="probe"&&V.draft){ addMeas(V.draft); V.draft=null; drawOverlay(); }
+    drag=null;
+  });
+
+  stage.addEventListener("wheel",ev=>{
+    if(!V.frameCanvas) return; ev.preventDefault();
+    if(ev.ctrlKey||ev.metaKey){ APP.view.zoom=clamp(APP.view.zoom*(ev.deltaY<0?1.12:1/1.12),0.1,20); drawViewer(); updateHUD(); }
+    else { step(ev.deltaY>0?1:-1); }
+  },{passive:false});
+
+  function updateProbe(ip){
+    const fr=APP.current.frame; const x=Math.round(ip.x),y=Math.round(ip.y);
+    if(!fr||x<0||y<0||x>=fr.width||y>=fr.height){ V.draft=null; drawOverlay(); return; }
+    let txt;
+    if(fr.color){ txt="("+x+","+y+")"; }
+    else{ const v=fr.values[y*fr.width+x]; const unit=APP.current.image.kind==="dicom"?" HU":""; txt=v.toFixed(0)+unit+"  ("+x+","+y+")"; }
+    V.draft={type:"probe",pts:[ip],txt,color:"#F26A6A"}; drawOverlay();
+  }
+}
+
+/* ---------- navegação por cortes ---------- */
+function step(d){ const s=APP.current.series; if(!s)return; loadInstance(clamp(APP.current.index+d,0,s.frames.length-1)); }
+function goto(i){ loadInstance(i); }
+
+/* ---------- cine ---------- */
+function playCine(){ const s=APP.current.series; if(!s||s.frames.length<2)return;
+  stopCine(); APP.cine.playing=true; $("#btnPlay").innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>';
+  // honestidade: percorrer cortes é uma reprodução gerada aqui, não um vídeo fornecido pelo hospital
+  $("#cineFps").textContent=APP.cine.fps+" fps";
+  APP.cine.timer=setInterval(()=>{
+    let n=APP.current.index+1;
+    if(n>=s.frames.length){ if(APP.cine.loop)n=0; else return stopCine(); }
+    loadInstance(n);
+  }, 1000/APP.cine.fps);
+}
+function stopCine(){ APP.cine.playing=false; if(APP.cine.timer)clearInterval(APP.cine.timer); APP.cine.timer=null;
+  $("#cineFps").textContent="";
+  $("#btnPlay").innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>'; }
+function toggleCine(){ APP.cine.playing?stopCine():playCine(); }
+
+/* ---------- controles diversos ---------- */
+function initControls(){
+  $("#sliceRange").addEventListener("input",e=>goto(parseInt(e.target.value,10)));
+  $("#btnFirst").onclick=()=>goto(0);
+  $("#btnLast").onclick=()=>{const s=APP.current.series;if(s)goto(s.frames.length-1);};
+  $("#btnPrev").onclick=()=>step(-1);
+  $("#btnNext").onclick=()=>step(1);
+  $("#btnPlay").onclick=toggleCine;
+  $("#fpsRange").addEventListener("input",e=>{APP.cine.fps=parseInt(e.target.value,10);if(APP.cine.playing)playCine();});
+  $("#loopChk").addEventListener("change",e=>APP.cine.loop=e.target.checked);
+  $("#wwRange").addEventListener("input",e=>applyWindow(parseInt(e.target.value,10),APP.view.wl));
+  $("#wlRange").addEventListener("input",e=>applyWindow(APP.view.ww,parseInt(e.target.value,10)));
+  $$(".insp-sec > h4").forEach(h=>h.addEventListener("click",()=>h.parentElement.classList.toggle("closed")));
+  // presets no inspector
+  const pg=$("#presetGrid"); WINDOW_PRESETS.forEach(p=>pg.append(el("button",{text:p.name,onclick:()=>applyWindow(p.ww,p.wl)})));
+
+  // teclado
+  window.addEventListener("keydown",ev=>{
+    if($("#modal").classList.contains("open")) { if(ev.key==="Escape")closeModal(); return; }
+    if(!APP.current.series) return;
+    // não captura teclas enquanto o foco está num controle (slider, select, campo)
+    const tg=ev.target&&ev.target.tagName; if(tg==="INPUT"||tg==="SELECT"||tg==="TEXTAREA") return;
+    // atalhos do visualizador só valem quando ele está aberto
+    if(!$("#view-viewer").classList.contains("active")) return;
+    const k=ev.key;
+    if(k==="ArrowDown"||k==="ArrowRight"){ step(1); ev.preventDefault(); }
+    else if(k==="ArrowUp"||k==="ArrowLeft"){ step(-1); ev.preventDefault(); }
+    else if(k===" "){ toggleCine(); ev.preventDefault(); }
+    else if(k==="f"){ resetViewTransform(true); drawViewer(); updateHUD(); }
+    else if(k==="r"){ APP.view.rotate=(APP.view.rotate+90)%360; drawViewer(); }
+    else if(k==="i"){ APP.view.invert=!APP.view.invert; refreshFrameRender(); }
+    else if(k==="Home"){ goto(0); } else if(k==="End"){ const s=APP.current.series; goto(s.frames.length-1); }
+    else if(k>="1"&&k<="8"){ const t=TOOLS[parseInt(k,10)-1]; if(t)setTool(t.id); }
+  });
+
+  // redesenho ao redimensionar
+  let rt; window.addEventListener("resize",()=>{ clearTimeout(rt); rt=setTimeout(()=>{ if(V.frameCanvas)drawViewer(); },120); });
+  $("#btnReloadSeries").onclick=()=>{ buildHierarchy(); renderSeriesList(); toast("Lista atualizada"); };
+}
+
+/* =====================================================================
+   IMPORTAÇÃO — leitura, classificação, hash e gravação local
+   ===================================================================== */
+let IMPORTING=false;
+function uid(){ try{ if(crypto.randomUUID) return crypto.randomUUID(); }catch(e){} return "f_"+Date.now().toString(36)+Math.random().toString(36).slice(2,9); }
+
+async function importFiles(fileList, progressCb){
+  if(IMPORTING){ toast("Importação já em andamento…","warn"); return; }
+  IMPORTING=true;
+  const report={discovered:0, imported:0, duplicates:0, failed:0, dicom:0, images:0, videos:0, pdfs:0, others:0, compressedSeries:0, zips:0, bytes:0, items:[]};
+  // pacotes .zip (como os baixados do portal) são abertos aqui mesmo, sem descompactar antes
+  const files=[];
+  for(const f of Array.from(fileList)){
+    if(isZipFile(f)){
+      progressCb&&progressCb(0,1,"abrindo "+f.name);
+      try{ files.push(...await expandZip(f)); report.zips++; }
+      catch(e){ report.failed++; report.items.push({name:f.name,status:"falha",error:String(e&&e.message||e)}); }
+    } else files.push(f);
+  }
+  report.discovered=files.length+report.failed;
+  const known=new Set(APP.files.map(f=>f.hash));
+  let done=0;
+  for(const file of files){
+    try{
+      const buf=await file.arrayBuffer();
+      const u8=new Uint8Array(buf);
+      const relPath=file.webkitRelativePath||file._path||file.name;
+      const folder=relPath.includes("/")?relPath.split("/").slice(0,-1).join("/"):"";
+      let kind=kindFromFile(file.name,file.type);
+      if(kind==="other"||kind==="dicom"){ if(looksDicom(u8)) kind="dicom"; }
+      const hash=await sha256Hex(buf);
+      if(known.has(hash)){ report.duplicates++; report.items.push({name:file.name,status:"duplicado"}); done++; progressCb&&progressCb(done,files.length,file.name); continue; }
+      known.add(hash);
+
+      const rec={ id:uid(), name:file.name, folder, path:relPath, size:file.size, type:file.type||"",
+        kind, hash, hashAlgo:"SHA-256", addedAt:new Date().toISOString(), meta:null, sourceZip:file._zip||null };
+
+      if(kind==="dicom"){
+        try{ rec.meta=parseDicom(buf);
+          if(rec.meta.isVideo) report.videos++;
+          else { if(rec.meta.compressed) report.compressedSeries++; report.dicom++; } }
+        catch(e){ rec.kind="other"; rec.parseError=String(e&&e.message||e); report.others++; }
+      } else if(kind==="image"){ report.images++; }
+      else if(kind==="video"){ report.videos++; }
+      else if(kind==="pdf"){ report.pdfs++; }
+      else report.others++;
+
+      await saveAsset(rec, buf);
+      APP.files.push(rec);
+      report.imported++; report.bytes+=file.size;
+      report.items.push({name:file.name,status:"importado",kind:rec.kind,size:file.size});
+    }catch(e){
+      report.failed++; report.items.push({name:file.name,status:"falha",error:String(e&&e.message||e)});
+    }
+    done++; progressCb&&progressCb(done,files.length,file.name);
+  }
+  buildHierarchy();
+  renderSeriesList();
+  updateTopStatus();
+  APP.report=report;
+  IMPORTING=false;
+  return report;
+}
+
+/* ---------- leitor de ZIP (sem bibliotecas: método STORE e DEFLATE nativo do navegador) ---------- */
+function isZipFile(f){ return /\.zip$/i.test(f.name||"") || /(^|\/)(x-)?zip(-compressed)?$/i.test(f.type||""); }
+async function expandZip(file){
+  // diretório central: lido do fim do arquivo, sem carregar o .zip inteiro na memória
+  const tailLen=Math.min(file.size,65535+22);
+  const tail=new Uint8Array(await file.slice(file.size-tailLen).arrayBuffer());
+  const tdv=new DataView(tail.buffer);
+  let e=-1; for(let i=tail.length-22;i>=0;i--){ if(tdv.getUint32(i,true)===0x06054b50){ e=i; break; } }
+  if(e<0) throw new Error("não é um ZIP válido (diretório central ausente)");
+  const count=tdv.getUint16(e+10,true), cdSize=tdv.getUint32(e+12,true), cdOff=tdv.getUint32(e+16,true);
+  if(count===0xFFFF||cdSize===0xFFFFFFFF||cdOff===0xFFFFFFFF)
+    throw new Error("ZIP64 (pacote acima de 4 GB): descompacte no computador e importe a pasta");
+  const cd=new Uint8Array(await file.slice(cdOff,cdOff+cdSize).arrayBuffer()); const dv=new DataView(cd.buffer);
+  const base=(file.name||"pacote").replace(/\.zip$/i,"");
+  const out=[]; let p=0;
+  for(let k=0;k<count && p+46<=cd.length;k++){
+    if(dv.getUint32(p,true)!==0x02014b50) throw new Error("diretório central do ZIP corrompido");
+    const flags=dv.getUint16(p+8,true), method=dv.getUint16(p+10,true), crc=dv.getUint32(p+16,true),
+          csize=dv.getUint32(p+20,true), usize=dv.getUint32(p+24,true), nlen=dv.getUint16(p+28,true),
+          xlen=dv.getUint16(p+30,true), clen=dv.getUint16(p+32,true), loff=dv.getUint32(p+42,true);
+    const name=new TextDecoder(flags&0x800?"utf-8":"windows-1252").decode(cd.subarray(p+46,p+46+nlen));
+    p+=46+nlen+xlen+clen;
+    // pastas e metadados do macOS (__MACOSX) não são arquivos do exame
+    if(name.endsWith("/")||name.startsWith("__MACOSX/")) continue;
+    out.push({ name:name.split("/").pop(), size:usize, type:"", _path:base+"/"+name, _zip:file.name,
+      arrayBuffer: async()=>{
+        if(flags&1) throw new Error("arquivo protegido por senha dentro do ZIP");
+        const lh=new DataView(await file.slice(loff,loff+30).arrayBuffer());
+        if(lh.getUint32(0,true)!==0x04034b50) throw new Error("cabeçalho local inválido no ZIP");
+        const start=loff+30+lh.getUint16(26,true)+lh.getUint16(28,true);
+        const raw=new Uint8Array(await file.slice(start,start+csize).arrayBuffer());
+        let data;
+        if(method===0) data=raw;
+        else if(method===8){
+          if(typeof DecompressionStream==="undefined") throw new Error("navegador sem descompressão nativa: descompacte o ZIP e importe a pasta");
+          data=new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+        } else throw new Error("compressão tipo "+method+" não suportada: descompacte o ZIP e importe a pasta");
+        if(data.length!==usize || crc32(data)!==crc) throw new Error("falha de integridade (CRC) ao extrair do ZIP");
+        return (data.byteOffset===0&&data.byteLength===data.buffer.byteLength)?data.buffer:data.slice().buffer;
+      }});
+  }
+  return out;
+}
+
+/* ---------- drag & drop (inclui pastas) ---------- */
+async function entriesFromDataTransfer(dt){
+  const out=[]; const items=dt.items?Array.from(dt.items):[];
+  const entries=items.map(it=>it.webkitGetAsEntry&&it.webkitGetAsEntry()).filter(Boolean);
+  if(entries.length){ for(const e of entries) await walkEntry(e,"",out); return out; }
+  return Array.from(dt.files||[]);
+}
+function walkEntry(entry,prefix,out){
+  return new Promise(res=>{
+    if(entry.isFile){ entry.file(f=>{ f._path=(prefix?prefix+"/":"")+entry.name; out.push(f); res(); }, ()=>res()); }
+    else if(entry.isDirectory){ const rd=entry.createReader(); const all=[];
+      const read=()=>rd.readEntries(async es=>{ if(!es.length){ for(const c of all) await walkEntry(c,(prefix?prefix+"/":"")+entry.name,out); res(); }
+        else { all.push(...es); read(); } }, ()=>res()); read();
+    } else res();
+  });
+}
+
+/* ---------- barra/indicadores de topo ---------- */
+function updateTopStatus(){
+  $("#examTitle").textContent=examHeading().line;
+  updateNav();
+}
+// título do exame a partir dos próprios metadados DICOM
+function examHeading(){
+  const f=APP.files.find(isImageDicom); const m=f?f.meta:null;
+  const title=(m&&(m.studyDesc||m.seriesDesc))||"";
+  const date=m&&m.studyDate?fmtDicomDate(m.studyDate):"";
+  return {m,title,date,line:[title,date].filter(Boolean).join(" · ")};
+}
+// seções sem conteúdo ficam ocultas na navegação
+function updateNav(){
+  const all=APP.studies.flatMap(st=>st.series);
+  const show={
+    mpr: all.some(s=>s.isVolume), mip: all.some(s=>s.isVolume),
+    thumb: all.some(s=>s.kind==="dicom"&&!s.instances[0].meta.compressed),
+    media: APP.files.some(f=>f.kind==="video"||f.kind==="image"||(isImageDicom(f)&&f.meta.isVideo)),
+    reports: APP.files.some(f=>f.kind==="pdf"),
+  };
+  for(const k in show){ const b=$('#rail .nav[data-view="'+k+'"]'); if(b) b.style.display=show[k]?"":"none"; }
+}
+function fmtDicomTime(t){ const m=/^(\d{2})(\d{2})/.exec(t||""); return m?m[1]+":"+m[2]:""; }
+function fmtSex(s){ return s==="F"?"Feminino":s==="M"?"Masculino":s||""; }
+
+/* ---------- gatilhos de UI de importação ---------- */
+function triggerFilePick(){ $("#fileInput").click(); }
+function triggerFolderPick(){ $("#folderInput").click(); }
+
+async function runImportUI(fileList){
+  setView("import");
+  const prog=$("#importProgress"); const bar=prog&&prog.querySelector(".bar"); const lbl=$("#importProgLbl");
+  if(prog) prog.classList.remove("hidden");
+  const rep=await importFiles(fileList,(d,t,nm)=>{
+    if(bar) bar.style.width=(d/t*100).toFixed(1)+"%";
+    if(lbl) lbl.textContent="Processando "+d+" / "+t+" — "+nm;
+  });
+  if(lbl) lbl.textContent="Concluído.";
+  renderImportPage();
+  if(rep){ toast("Importação concluída: "+rep.imported+" arquivo(s). "+(rep.compressedSeries?rep.compressedSeries+" comprimido(s).":""), rep.failed?"warn":"ok", 5000);
+    if(rep.imported>0 && APP.studies.length){ // abre a primeira série com imagens
+      const firstSeries=APP.studies.flatMap(s=>s.series).find(s=>s.instances.length);
+      if(firstSeries) selectSeries(firstSeries);
+    }
+  }
+  await requestPersist();
+}
+
+/* =====================================================================
+   PÁGINAS: Visão geral, Mídia, Laudos, Arquivo
+   ===================================================================== */
+// DICOM que contém imagem (DICOMDIR, laudos estruturados etc. não contam como imagem)
+function isImageDicom(f){ return f.kind==="dicom" && !!(f.meta&&f.meta.pixel&&f.meta.pixel.present); }
+function counts(){
+  const c={series:0,studies:APP.studies.length,dicom:0,images:0,videos:0,pdfs:0,others:0,bytes:0,volumes:0,compressed:0};
+  for(const f of APP.files){
+    const dicomVideo=isImageDicom(f)&&f.meta.isVideo;
+    c[dicomVideo?"videos":isImageDicom(f)?"dicom":f.kind==="image"?"images":f.kind==="video"?"videos":f.kind==="pdf"?"pdfs":"others"]++;
+    c.bytes+=f.size||0; if(isImageDicom(f)&&f.meta.compressed&&!f.meta.isVideo)c.compressed++;
+  }
+  for(const st of APP.studies) for(const s of st.series){ c.series++; if(s.isVolume)c.volumes++; }
+  return c;
+}
+
+function renderOverview(){
+  const p=$("#page-overview"); const c=counts();
+  p.innerHTML="";
+  if(!APP.files.length){
+    p.append(el("div",{style:"text-align:center;padding:80px 20px"},
+      el("h2",{style:"font-size:17px;margin:0 0 18px",text:"Nenhum exame carregado"}),
+      el("button",{class:"btn primary",text:"Importar",onclick:()=>setView("import")})));
+    return;
+  }
+  const h=examHeading(), m=h.m||{};
+  p.append(el("h1",{text:h.title||"Tomografia computadorizada"}),
+    el("div",{class:"sub",text:[h.date,m.modality,m.bodyPart].filter(Boolean).join(" · ")}));
+
+  if(m.patientName||m.patientBirth||m.patientID){
+    const pat=el("div",{class:"panel-box",style:"margin-top:0;margin-bottom:16px"});
+    pat.append(el("h3",{text:"Paciente"}));
+    const rows=[["Nome",(m.patientName||"").replace(/\^/g," ").trim()],["Nascimento",m.patientBirth?fmtDicomDate(m.patientBirth):""],
+      ["Sexo",fmtSex(m.patientSex)],["Identificação",m.patientID]];
+    for(const[k,v]of rows) if(v) pat.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v",text:v})));
+    p.append(pat);
+  }
+  if(m.institution||m.referringPhysician||m.accession||m.manufacturer){
+    const ex=el("div",{class:"panel-box",style:"margin-top:0;margin-bottom:16px"});
+    ex.append(el("h3",{text:"Exame"}));
+    const rows=[["Instituição",m.institution],["Médico solicitante",m.referringPhysician],["Nº de acesso",m.accession],
+      ["Data e hora",[m.studyDate?fmtDicomDate(m.studyDate):"",fmtDicomTime(m.studyTime)].filter(Boolean).join(" ")],
+      ["Equipamento",[m.manufacturer,m.stationName].filter(Boolean).join(" · ")]];
+    for(const[k,v]of rows) if(v) ex.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v",text:v})));
+    p.append(ex);
+  }
+
+  const grid=el("div",{class:"cards"});
+  const stat=(n,l)=>el("div",{class:"stat"},el("div",{class:"n",text:String(n)}),el("div",{class:"l",text:l}));
+  grid.append(stat(c.series,"Séries"),stat(c.dicom+c.images,"Imagens"),stat(c.videos,"Vídeos"),stat(c.pdfs,"Documentos"));
+  p.append(grid);
+
+  // séries: miniaturas clicáveis que abrem no visualizador
+  const series=APP.studies.flatMap(st=>st.series);
+  if(series.length){
+    p.append(el("h3",{style:"margin:26px 0 12px;font-size:13.5px",text:"Séries"}));
+    const g=el("div",{class:"media-grid"});
+    for(const s of series){
+      const img=el("img",{alt:""}); makeSeriesThumb(s).then(u=>{ if(u) img.src=u; });
+      g.append(el("div",{class:"media-tile",onclick:()=>selectSeries(s)},
+        el("div",{class:"mt-thumb"},img),
+        el("div",{class:"mt-info"},el("div",{class:"t",text:s.desc||"Série"}),
+          el("div",{class:"s",text:[s.modality,s.frames.length+(s.frames.length===1?" imagem":" imagens"),s.isVolume?"3D":""].filter(Boolean).join(" · ")}))));
+    }
+    p.append(g);
+  }
+  const vids=APP.files.filter(f=>f.kind==="video"||(isImageDicom(f)&&f.meta.isVideo));
+  if(vids.length){
+    p.append(el("h3",{style:"margin:26px 0 12px;font-size:13.5px",text:"Vídeos"}));
+    const g=el("div",{class:"media-grid"});
+    for(const f of vids) g.append(mediaTile(f));
+    p.append(g);
+  }
+  const docs=APP.files.filter(f=>f.kind==="pdf");
+  if(docs.length){
+    p.append(el("h3",{style:"margin:26px 0 12px;font-size:13.5px",text:"Laudo e documentos"}));
+    const g=el("div",{class:"cards"});
+    for(const f of docs) g.append(docCard(f));
+    p.append(g);
+  }
+}
+
+
+const isDicomVideo=f=>isImageDicom(f)&&f.meta.isVideo;
+const VIDEO_ICON='<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4F9CF9" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M10 9l5 3-5 3z"/></svg>';
+
+function mediaTile(f){
+  const th=el("div",{class:"mt-thumb"});
+  if(f.kind==="image"){ const img=el("img",{alt:""}); thumbForImageFile(f).then(u=>{ if(u) img.src=u; }); th.append(img); }
+  else{ th.innerHTML=VIDEO_ICON; if(f.kind==="video") thumbForVideoFile(f).then(u=>{ if(u){ th.innerHTML=""; th.append(el("img",{src:u,alt:""})); } }); }
+  const kind=isDicomVideo(f)?"Vídeo DICOM":f.kind==="video"?"Vídeo":"Imagem";
+  return el("div",{class:"media-tile",onclick:()=>openMedia(f)},th,
+    el("div",{class:"mt-info"},el("div",{class:"t",text:f.name}),el("div",{class:"s",text:kind+" · "+fmtBytes(f.size)})));
+}
+// miniatura de vídeo: quadro capturado do próprio arquivo
+async function thumbForVideoFile(f){
+  try{
+    const buf=await getBuf(f.id); const url=URL.createObjectURL(new Blob([buf],{type:f.type||"video/mp4"}));
+    const v=document.createElement("video"); v.muted=true; v.preload="auto"; v.src=url;
+    await new Promise((res,rej)=>{ v.onloadeddata=res; v.onerror=rej; setTimeout(rej,8000); });
+    const t=isFinite(v.duration)&&v.duration>0?Math.min(1,v.duration/3):0;
+    if(t>0){ await new Promise(res=>{ v.onseeked=res; v.currentTime=t; setTimeout(res,3000); }); }
+    const c=document.createElement("canvas"); const r=Math.min(1,240/Math.max(v.videoWidth,v.videoHeight)||1);
+    c.width=Math.max(1,Math.round(v.videoWidth*r)); c.height=Math.max(1,Math.round(v.videoHeight*r));
+    c.getContext("2d").drawImage(v,0,0,c.width,c.height); URL.revokeObjectURL(url);
+    return c.toDataURL("image/jpeg",0.8);
+  }catch(e){ return null; }
+}
+function docCard(f){
+  return el("div",{class:"stat",style:"cursor:pointer",onclick:()=>openDoc(f)},
+    el("div",{html:'<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ffb46b" stroke-width="1.6"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></svg>'}),
+    el("div",{class:"l",style:"margin-top:8px;font-weight:600;color:var(--text)",text:f.name}),
+    el("div",{class:"l2",text:fmtBytes(f.size)}));
+}
+
+function renderMedia(){
+  const p=$("#page-media");
+  const vids=APP.files.filter(f=>f.kind==="video"||isDicomVideo(f));
+  const imgs=APP.files.filter(f=>f.kind==="image");
+  p.innerHTML=""; p.append(el("h1",{style:"margin-bottom:18px",text:"Vídeos e imagens"}));
+  if(!vids.length&&!imgs.length){ p.append(el("div",{class:"muted-c",text:"Nenhum vídeo ou imagem."})); return; }
+  for(const [title,list] of [["Vídeos",vids],["Imagens",imgs]]){
+    if(!list.length) continue;
+    p.append(el("h3",{style:"margin:6px 0 12px;font-size:13.5px",text:title}));
+    const g=el("div",{class:"media-grid",style:"margin-bottom:24px"}); for(const f of list) g.append(mediaTile(f)); p.append(g);
+  }
+}
+
+async function openMedia(f){
+  // imagens abrem no visualizador, com zoom, deslocamento, janela e medições
+  if(f.kind==="image"){
+    for(const st of APP.studies) for(const s of st.series){
+      const i=s.frames.findIndex(fr=>fr.f.id===f.id);
+      if(i>=0){ await selectSeries(s); if(APP.current.index!==i) await loadInstance(i); return; }
+    }
+  }
+  const buf=await getBuf(f.id);
+  if(f.kind==="dicom"){
+    openModal(f.name, el("div",{},
+      el("div",{class:"row-line"},el("span",{text:"Formato"}),el("span",{class:"v",text:f.meta.transferSyntaxName})),
+      el("div",{class:"row-line"},el("span",{text:"Tamanho"}),el("span",{class:"v",text:fmtBytes(f.size)})),
+      el("div",{style:"margin-top:14px"},el("button",{class:"btn primary",text:"Baixar",onclick:()=>downloadBytes(f.name,buf,"application/dicom")}))));
+    return;
+  }
+  const url=URL.createObjectURL(new Blob([buf],{type:f.type||"video/mp4"})); APP._modalUrl=url;
+  const v=el("video",{src:url,controls:"",autoplay:"",playsinline:"",style:"width:100%;max-height:68vh;display:block"});
+  v.loop=true;
+  const FR=1/30; // passo de quadro
+  const step=d=>{ v.pause(); v.currentTime=clamp(v.currentTime+d*FR,0,isFinite(v.duration)?v.duration:1e9); };
+  const speed=el("select",{class:"mini",onchange:e=>{ v.playbackRate=parseFloat(e.target.value); }});
+  for(const r of [0.25,0.5,1,1.5,2]) speed.append(el("option",{value:r,text:r+"×"})); speed.value="1";
+  const time=el("span",{class:"muted-c",style:"font:12px var(--mono);margin-left:auto"});
+  const fmtT=t=>isFinite(t)?(Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0")+"."+String(Math.floor((t%1)*100)).padStart(2,"0")):"--";
+  v.addEventListener("timeupdate",()=>{ time.textContent=fmtT(v.currentTime)+" / "+fmtT(v.duration); });
+  const loop=el("label",{style:"display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)"},
+    el("input",{type:"checkbox",checked:"",onchange:e=>{ v.loop=e.target.checked; }}),"Repetir");
+  const bar=el("div",{style:"margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"},
+    el("button",{class:"btn",title:"Quadro anterior",text:"◀ Quadro",onclick:()=>step(-1)}),
+    el("button",{class:"btn",title:"Reproduzir / pausar",text:"Reproduzir / pausar",onclick:()=>{ v.paused?v.play():v.pause(); }}),
+    el("button",{class:"btn",title:"Próximo quadro",text:"Quadro ▶",onclick:()=>step(1)}),
+    speed, loop,
+    el("button",{class:"btn",text:"Tela cheia",onclick:()=>{ (v.requestFullscreen||v.webkitEnterFullscreen||(()=>{})).call(v); }}),
+    el("button",{class:"btn primary",text:"Baixar",onclick:()=>downloadBytes(f.name,buf,f.type)}),
+    time);
+  openModal(f.name, el("div",{},v,bar));
+}
+
+function renderReports(){
+  const p=$("#page-reports");
+  const docs=APP.files.filter(f=>f.kind==="pdf");
+  p.innerHTML=""; p.append(el("h1",{style:"margin-bottom:18px",text:"Laudo e documentos"}));
+  if(!docs.length){ p.append(el("div",{class:"muted-c",text:"Nenhum documento."})); return; }
+  const grid=el("div",{class:"cards"}); for(const f of docs) grid.append(docCard(f)); p.append(grid);
+}
+async function openDoc(f){
+  const buf=await getBuf(f.id); const url=URL.createObjectURL(new Blob([buf],{type:"application/pdf"})); APP._modalUrl=url;
+  const wrap=el("div",{},el("iframe",{src:url,style:"width:100%;height:72vh;border:0;border-radius:8px;background:#fff"}),
+    el("div",{style:"margin-top:12px"},el("button",{class:"btn primary",text:"Baixar",onclick:()=>downloadBytes(f.name,buf,"application/pdf")})));
+  openModal(f.name,wrap);
+}
+
+function renderArchive(){
+  const p=$("#page-archive");
+  p.innerHTML="";
+  const head=el("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"},
+    el("h1",{style:"margin:0",text:"Arquivos do exame"}),
+    APP.files.length?el("button",{class:"btn primary",text:"Baixar tudo (.zip)",onclick:exportAll}):null);
+  p.append(head);
+  if(!APP.files.length){ p.append(el("div",{class:"muted-c",style:"margin-top:16px",text:"Nenhum arquivo."})); return; }
+  const tree=el("div",{class:"tree",style:"margin-top:16px"});
+  for(const st of APP.studies){
+    tree.append(el("div",{class:"tnode"},el("span",{class:"exp",text:"▸"}),
+      el("span",{class:"nm",style:"font-weight:700",text:(st.uid==="MIDIA-IMPORTADA"?"Imagens":(st.desc||"Estudo"))}),
+      el("span",{class:"sz"})));
+    for(const s of st.series){
+      tree.append(el("div",{class:"tnode depth1"},el("span",{class:"exp",text:"▾"}),
+        el("span",{class:"nm",text:(s.desc||"Série")+"  ·  "+s.instances.length+" item(ns)"+(s.isVolume?"  · volume 3D":"")}),
+        el("span",{class:"dl",text:"baixar série",onclick:()=>exportSeries(s)})));
+      for(const f of s.instances){
+        const kindTag = f.kind==="dicom"?(f.meta&&f.meta.compressed?"DICOM comprimido":"DICOM"):f.kind==="image"?"Imagem":f.kind==="video"?"Vídeo":f.kind==="pdf"?"Documento":"Arquivo";
+        tree.append(el("div",{class:"tnode depth2"},el("span",{class:"exp"}),
+          el("span",{class:"nm",title:f.hash,text:f.name+"   ["+kindTag+"]"}),
+          el("span",{class:"sz",text:fmtBytes(f.size)}),
+          el("span",{class:"dl",text:"baixar",onclick:async()=>{const b=await getBuf(f.id);downloadBytes(f.name,b,f.type);}})));
+      }
+    }
+  }
+  const loose=looseFiles();
+  if(loose.length){
+    tree.append(el("div",{class:"tnode"},el("span",{class:"exp",text:"▸"}),
+      el("span",{class:"nm",style:"font-weight:700",text:"Vídeos, documentos e outros arquivos"}),el("span",{class:"sz"})));
+    for(const f of loose){
+      tree.append(el("div",{class:"tnode depth1"},el("span",{class:"exp"}),
+        el("span",{class:"nm",title:f.hash,text:f.name+"   ["+looseLabel(f)+"]"}),
+        el("span",{class:"sz",text:fmtBytes(f.size)}),
+        el("span",{class:"dl",text:"baixar",onclick:async()=>{const b=await getBuf(f.id);downloadBytes(f.name,b,f.type);}})));
+    }
+  }
+  p.append(tree);
+}
+
+/* ---------- utilitários de página ---------- */
+function emptyState(title,desc,btn,view){
+  return '<div style="text-align:center;padding:60px 20px;color:var(--muted)"><h2 style="color:var(--text);font-size:17px;margin:0 0 8px">'+esc(title)+'</h2><p style="max-width:460px;margin:0 auto 18px;line-height:1.7">'+esc(desc)+'</p><button class="btn primary" data-go="'+view+'">'+esc(btn)+'</button></div>';
+}
+function wireEmptyBtns(){ $$("[data-go]").forEach(b=>b.onclick=()=>setView(b.dataset.go)); }
+function emptyNode(t,d){ const n=el("div",{class:"panel-box",style:"text-align:center;color:var(--muted)"}); n.innerHTML="<p style='font-size:14px;color:var(--text);margin:6px 0'>"+esc(t)+"</p><p style='margin:0'>"+esc(d)+"</p>"; return n; }
+function downloadBytes(name,buf,mime){
+  const blob=buf instanceof Blob?buf:new Blob([buf],{type:mime||"application/octet-stream"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name||"arquivo"; document.body.append(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove();},60000); // folga para downloads grandes
+}
+
+/* =====================================================================
+   GERADOR DE ZIP (método STORE) + EXPORTAÇÃO / BACKUP
+   ===================================================================== */
+function buildZipBlob(entries){
+  const enc=new TextEncoder();
+  const chunks=[]; const central=[]; let offset=0;
+  function u16(n){ const b=new Uint8Array(2); new DataView(b.buffer).setUint16(0,n,true); return b; }
+  function u32(n){ const b=new Uint8Array(4); new DataView(b.buffer).setUint32(0,n>>>0,true); return b; }
+  // ZIP clássico (sem ZIP64): no máximo 65535 entradas e ~4 GB
+  const total=entries.reduce((a,e)=>a+(e.bytes.length||e.bytes.byteLength||0),0);
+  if(entries.length>65535 || total>0xFFFFFFFF-50*1024*1024)
+    throw new Error("Backup grande demais para um único .zip ("+fmtBytes(total)+"). Exporte por série.");
+  const now=new Date();
+  const dosTime=(now.getHours()<<11)|(now.getMinutes()<<5)|(now.getSeconds()>>1);
+  const dosDate=((now.getFullYear()-1980)<<9)|((now.getMonth()+1)<<5)|now.getDate();
+  for(const e of entries){
+    const nameBytes=enc.encode(e.name);
+    const data=e.bytes instanceof Uint8Array?e.bytes:new Uint8Array(e.bytes);
+    const crc=crc32(data);
+    const local=[u32(0x04034b50),u16(20),u16(0x0800),u16(0),u16(dosTime),u16(dosDate),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),nameBytes];
+    for(const c of local) chunks.push(c); chunks.push(data);
+    const localSize=30+nameBytes.length+data.length;
+    central.push([u32(0x02014b50),u16(20),u16(20),u16(0x0800),u16(0),u16(dosTime),u16(dosDate),u32(crc),u32(data.length),u32(data.length),u16(nameBytes.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),nameBytes]);
+    offset+=localSize;
+  }
+  const cdStart=offset; const cdParts=[];
+  for(const c of central){ for(const part of c){ cdParts.push(part); offset+=part.length; } }
+  const cdSize=offset-cdStart;
+  const eocd=[u32(0x06054b50),u16(0),u16(0),u16(central.length),u16(central.length),u32(cdSize),u32(cdStart),u16(0)];
+  return new Blob([...chunks,...cdParts,...eocd],{type:"application/zip"});
+}
+
+// arquivos que não pertencem a nenhuma série visível (vídeos, PDFs, DICOMDIR, outros)
+function looseFiles(){
+  const inSeries=new Set(); for(const st of APP.studies) for(const s of st.series) for(const f of s.instances) inSeries.add(f.id);
+  return APP.files.filter(f=>!inSeries.has(f.id));
+}
+const LOOSE_FOLDER={video:"videos",pdf:"documentos",image:"imagens",dicom:"dicom_sem_imagem",other:"outros"};
+function looseLabel(f){ return f.kind==="video"?"Vídeo original":f.kind==="pdf"?"Documento (PDF)":f.kind==="dicom"?"DICOM sem imagem (DICOMDIR / estruturado)":f.kind==="image"?"Imagem original":"Arquivo original"; }
+
+function safeName(s){ return String(s||"").replace(/[^\w.\-áéíóúâêôãõçÁÉÍÓÚÂÊÔÃÕÇ ]+/g,"_").replace(/\s+/g,"_").slice(0,80)||"item"; }
+
+function buildManifest(fileSubset){
+  const list=fileSubset||APP.files;
+  return {
+    arquivo:"Tomografia computadorizada — exportação",
+    gerado_em:new Date().toISOString(),
+    observacao:"Bytes originais preservados sem modificação. Hashes SHA-256 para verificação de integridade.",
+    total_arquivos:list.length,
+    total_bytes:list.reduce((a,f)=>a+(f.size||0),0),
+    estudos:APP.studies.map(st=>({
+      descricao:st.desc, data:st.date, uid:st.uid,
+      series:st.series.map(s=>({
+        descricao:s.desc, numero:s.number, modalidade:s.modality, uid:s.uid,
+        volume_3d:!!s.isVolume, imagens:s.instances.length,
+        instancias:s.instances.filter(f=>list.includes(f)).map(f=>({
+          arquivo:f.name, tipo:f.kind, tamanho:f.size, sha256:f.hash,
+          comprimido:f.meta?f.meta.compressed:false,
+          dimensoes:f.meta?((f.meta.cols||"")+"x"+(f.meta.rows||"")):null,
+          instancia:f.meta?f.meta.instanceNumber:null,
+        })),
+      })),
+    })),
+    outros_arquivos: looseFiles().filter(f=>list.includes(f)).map(f=>({
+      arquivo:f.name, caminho_original:f.path, tipo:f.kind, descricao:looseLabel(f), tamanho:f.size, sha256:f.hash,
+    })),
+  };
+}
+
+async function exportEntries(fileSubset, zipName){
+  toast("Gerando backup… isso pode levar alguns segundos.","",6000);
+  const list=fileSubset||APP.files;
+  const entries=[]; const checks=[]; const missing=[]; const used=new Set();
+  // evita sobrescrever dois arquivos de mesmo nome na mesma pasta do .zip
+  function uniquePath(p){ if(!used.has(p)){used.add(p);return p;} const dot=p.lastIndexOf("."); let i=2,q;
+    do{ q=dot>p.lastIndexOf("/")?(p.slice(0,dot)+"_"+i+p.slice(dot)):(p+"_"+i); i++; }while(used.has(q)); used.add(q); return q; }
+  async function add(f,folder){
+    const buf=await getBuf(f.id); if(!buf){ missing.push(f.name); return; }
+    const path=uniquePath("ARQUIVO_TC/"+folder+"/"+f.name);
+    entries.push({name:path,bytes:new Uint8Array(buf)});
+    checks.push(f.hash+"  "+path);
+  }
+  for(const st of APP.studies){
+    for(const s of st.series){
+      for(const f of s.instances){
+        if(!list.includes(f)) continue;
+        await add(f, safeName(st.uid==="MIDIA-IMPORTADA"?"midia":(st.desc||"estudo"))+"/"+safeName(s.desc||("serie_"+s.number)));
+      }
+    }
+  }
+  // vídeos, PDFs, DICOMDIR e demais arquivos: também vão para o backup
+  for(const f of looseFiles()){ if(list.includes(f)) await add(f, LOOSE_FOLDER[f.kind]||"outros"); }
+  if(missing.length) toast("Atenção: "+missing.length+" arquivo(s) sem dados locais não entraram no backup: "+missing.map(esc).join(", "),"err",9000);
+  const enc=new TextEncoder();
+  entries.push({name:"ARQUIVO_TC/manifest.json",bytes:enc.encode(JSON.stringify(buildManifest(list),null,2))});
+  entries.push({name:"ARQUIVO_TC/integridade/checksums.sha256",bytes:enc.encode(checks.join("\n")+"\n")});
+  entries.push({name:"ARQUIVO_TC/LEIA-ME.txt",bytes:enc.encode(
+    "TOMOGRAFIA COMPUTADORIZADA - ARQUIVOS DO EXAME\n\n"+
+    "Conteudo: arquivos originais do exame, manifest.json e integridade/checksums.sha256 (SHA-256).\n\n"+
+    "Para abrir: abra o index.html no navegador, clique em Importar e selecione este .zip ou a pasta.\n\n"+
+    "Gerado em "+new Date().toLocaleString("pt-BR")+"\n"
+  )});
+  let blob;
+  try{ blob=buildZipBlob(entries); }
+  catch(e){ toast(esc(e.message),"err",9000); return; }
+  downloadBytes((zipName||("ARQUIVO_TC_"+nowStamp()))+".zip", blob);
+  toast("Backup gerado ("+fmtBytes(blob.size)+", "+(entries.length-3)+" arquivo(s) original(is)).","ok",5000);
+}
+function exportAll(){ if(!APP.files.length){toast("Nada para exportar.","warn");return;} exportEntries(null,"ARQUIVO_TC_completo_"+nowStamp()); }
+function exportSeries(s){ exportEntries(s.instances,"serie_"+safeName(s.desc)+"_"+nowStamp()); }
+
+/* =====================================================================
+   SITE COMPLETO EM ARQUIVO ÚNICO
+   Gera um .html com o visualizador e todos os arquivos do exame embutidos
+   (base64, um bloco por arquivo). Ao abrir, o exame é carregado sozinho.
+   Obs.: as tags de script são escritas como "<\/script>" para não encerrar
+   este próprio bloco de código no HTML.
+   ===================================================================== */
+let APP_SOURCE="";
+const EMBED={files:[],bundle:null};
+
+// chamado no início do boot: separa os dados embutidos e guarda o código-fonte limpo do site
+function captureEmbedded(){
+  for(const n of document.querySelectorAll('script[type="application/x-exam-file"]')){
+    EMBED.files.push({name:n.dataset.name||"arquivo",path:n.dataset.path||n.dataset.name||"arquivo",
+      type:n.dataset.type||"",size:parseInt(n.dataset.size||"0",10)||0,b64:n.textContent});
+    n.remove();
+  }
+  const b=document.getElementById("exam-bundle");
+  if(b){ try{ EMBED.bundle=JSON.parse(b.textContent); }catch(e){} b.remove(); }
+  APP_SOURCE="<!DOCTYPE html>\n"+document.documentElement.outerHTML;
+}
+
+function bufToB64(buf){
+  return new Promise((res,rej)=>{ const fr=new FileReader();
+    fr.onload=()=>{ const s=fr.result; res(s.slice(s.indexOf(",")+1)); };
+    fr.onerror=()=>rej(fr.error); fr.readAsDataURL(new Blob([buf])); });
+}
+async function b64ToBuf(b64){
+  try{ const r=await fetch("data:application/octet-stream;base64,"+b64); if(r.ok) return await r.arrayBuffer(); }catch(e){}
+  const bin=atob(b64); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); return u.buffer;
+}
+
+function showLoading(label,frac){
+  let o=$("#loadingOverlay");
+  if(!o){ o=el("div",{id:"loadingOverlay"},el("div",{class:"lo-box"},el("div",{class:"lo-t",id:"loLabel"}),
+      el("div",{class:"progress"},el("div",{class:"bar",id:"loBar"})))); document.body.append(o); }
+  $("#loLabel").textContent=label; $("#loBar").style.width=(clamp(frac,0,1)*100).toFixed(1)+"%";
+}
+function hideLoading(){ const o=$("#loadingOverlay"); if(o) o.remove(); }
+
+// carrega no armazenamento local os arquivos embutidos (uma única vez por arquivo .html)
+async function loadEmbedded(){
+  if(!EMBED.files.length) return;
+  const id=EMBED.bundle&&EMBED.bundle.id;
+  const seen=id?await idbGet("meta","bundleId"):null;
+  if(!(id && seen===id && APP.files.length)){
+    const list=EMBED.files.map(e=>({name:e.name,size:e.size,type:e.type,_path:e.path,arrayBuffer:()=>b64ToBuf(e.b64)}));
+    showLoading("Carregando exame…",0);
+    await importFiles(list,(d,t)=>showLoading("Carregando exame… "+d+" / "+t,d/t));
+    // medições gravadas no arquivo: chaveadas pelo SHA-256 do arquivo de origem
+    const meas=(EMBED.bundle&&EMBED.bundle.meas)||{};
+    const byHash=new Map(APP.files.map(f=>[f.hash,f.id]));
+    for(const k in meas){ const [h,fr]=k.split("#"); const fid=byHash.get(h); if(fid) APP.measurements[fr?fid+"#"+fr:fid]=meas[k]; }
+    await persistMeas();
+    if(id){ try{ await idbPut("meta",id,"bundleId"); }catch(e){} }
+    hideLoading();
+  }
+  EMBED.files=[]; // libera a memória dos dados em texto
+}
+
+function suggestedName(){
+  const h=examHeading(); const base=[h.title||"Tomografia",h.m&&h.m.studyDate?h.m.studyDate:""].filter(Boolean).join("_");
+  return safeName(base)||"Tomografia";
+}
+
+async function exportStandaloneSite(){
+  if(!APP.files.length) return;
+  const src=APP_SOURCE, cut=src.lastIndexOf("</bo"+"dy>");
+  if(cut<0){ toast("Não foi possível gerar o arquivo.","err"); return; }
+  const parts=[src.slice(0,cut)];
+  const idToHash=new Map(APP.files.map(f=>[f.id,f.hash]));
+  const meas={};
+  for(const k in APP.measurements){ const [fid,fr]=k.split("#"); const h=idToHash.get(fid);
+    if(h&&APP.measurements[k]&&APP.measurements[k].length) meas[fr?h+"#"+fr:h]=APP.measurements[k]; }
+  const bundle={id:uid(),created:new Date().toISOString(),files:APP.files.length,meas};
+  parts.push('\n<script type="application/json" id="exam-bundle">'+JSON.stringify(bundle).replace(/</g,"\\u003c")+"<\/script>\n");
+  let i=0, total=0;
+  for(const f of APP.files){
+    showLoading("Gerando arquivo… "+(i+1)+" / "+APP.files.length,i/APP.files.length);
+    const buf=await getBuf(f.id); i++; if(!buf) continue;
+    parts.push('<script type="application/x-exam-file" data-name="'+esc(f.name)+'" data-path="'+esc(f.path||f.name)+
+      '" data-type="'+esc(f.type||"")+'" data-size="'+(f.size||buf.byteLength)+'">',await bufToB64(buf),"<\/script>\n");
+    total+=buf.byteLength;
+  }
+  parts.push(src.slice(cut));
+  const blob=new Blob(parts,{type:"text/html"});
+  hideLoading();
+  downloadBytes(suggestedName()+".html",blob);
+  toast("Arquivo gerado: "+fmtBytes(blob.size)+".","ok",5000);
+}
+
+/* ---------- PÁGINA: Importar / Integridade ---------- */
+function renderImportPage(){
+  const p=$("#page-import"); p.innerHTML="";
+  p.append(el("h1",{style:"margin-bottom:18px",text:"Importar"}));
+
+  const dz=el("div",{class:"dropzone",id:"dropzone"},
+    el("div",{html:'<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4F9CF9" stroke-width="1.5"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>'}),
+    el("div",{class:"big",text:"Arraste arquivos, pastas ou pacotes .zip"}),
+    el("div",{text:"DICOM · DICOMDIR · ZIP · PNG · JPEG · TIFF · MP4 · WebM · MOV · PDF"}),
+    el("div",{style:"margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap"},
+      el("button",{class:"btn primary",text:"Selecionar arquivos",onclick:triggerFilePick}),
+      el("button",{class:"btn",text:"Selecionar pasta",onclick:triggerFolderPick})));
+  p.append(dz);
+  const prog=el("div",{id:"importProgress",class:"hidden",style:"margin-top:16px"},
+    el("div",{class:"progress"},el("div",{class:"bar"})),
+    el("div",{id:"importProgLbl",style:"font-size:11.5px;color:var(--muted);margin-top:6px"}));
+  p.append(prog);
+
+  if(APP.report){
+    const r=APP.report; const box=el("div",{class:"panel-box"});
+    box.append(el("h3",{text:"Última importação"}));
+    const rows=[["Pacotes .zip abertos",r.zips||0],["Arquivos encontrados",r.discovered],["Importados",r.imported],["Duplicados (ignorados)",r.duplicates],
+      ["Falhas",r.failed],["DICOM",r.dicom],["Imagens",r.images],["Vídeos",r.videos],["PDFs",r.pdfs],
+      ["Imagens comprimidas",r.compressedSeries],["Tamanho importado",fmtBytes(r.bytes)]];
+    for(const[k,v]of rows) box.append(el("div",{class:"row-line"},el("span",{text:k}),el("span",{class:"v"+(k==="Falhas"&&v?" danger-c":""),text:String(v)})));
+    if(r.failed){ const fails=r.items.filter(i=>i.status==="falha"); box.append(el("div",{style:"margin-top:8px;color:var(--danger);font-size:11.5px"},"Falhas: "+fails.map(f=>f.name+(f.error?" ("+f.error+")":"")).join(", "))); }
+    p.append(box);
+  }
+
+  if(APP.files.length){
+    const integ=el("div",{class:"panel-box"});
+    integ.innerHTML="<h3>Integridade (SHA-256)</h3>";
+    integ.append(el("button",{class:"btn",text:"Verificar integridade",onclick:verifyIntegrity}),el("div",{id:"integResult",style:"margin-top:10px"}));
+    p.append(integ);
+  }
+  setupDropzone();
+}
+function setupDropzone(){
+  const dz=$("#dropzone"); if(!dz) return;
+  ["dragenter","dragover"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add("drag");}));
+  ["dragleave","drop"].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove("drag");}));
+  // stopPropagation: evita que o "drop" da janela inteira importe os mesmos arquivos de novo
+  dz.addEventListener("drop",async e=>{ e.stopPropagation(); const files=await entriesFromDataTransfer(e.dataTransfer); if(files.length) runImportUI(files); });
+}
+async function verifyIntegrity(){
+  const box=$("#integResult"); box.innerHTML="<span class='muted-c'>Verificando…</span>";
+  let ok=0,bad=0; const fails=[];
+  for(const f of APP.files){ const buf=await getBuf(f.id); if(!buf){bad++;fails.push(f.name+" (dados ausentes)");continue;}
+    const h=await sha256Hex(buf); if(h===f.hash)ok++; else {bad++;fails.push(f.name+" (hash divergente)");} }
+  box.innerHTML="<div class='row-line'><span>Íntegros</span><span class='v ok-c'>"+ok+"</span></div>"+
+    "<div class='row-line'><span>Com problema</span><span class='v "+(bad?"danger-c":"ok-c")+"'>"+bad+"</span></div>"+
+    (fails.length?("<div style='color:var(--danger);font-size:11.5px;margin-top:6px'>"+fails.map(esc).join("<br>")+"</div>"):"");
+  toast(bad?("Integridade: "+bad+" problema(s).") : "Integridade: todos os "+ok+" arquivos OK.", bad?"err":"ok",4000);
+}
+
+/* ---------- PÁGINA: Exportar / Backup ---------- */
+function renderExportPage(){
+  const p=$("#page-export"); p.innerHTML="";
+  p.append(el("h1",{style:"margin-bottom:18px",text:"Exportar"}));
+  if(!APP.files.length){ p.append(el("div",{class:"muted-c",text:"Nenhum arquivo."})); return; }
+  const c=counts();
+  const site=el("div",{class:"panel-box",style:"margin-top:0"});
+  site.innerHTML="<h3>Site completo com o exame (arquivo único .html)</h3>";
+  site.append(el("div",{class:"row-line"},el("span",{text:"Arquivos embutidos"}),el("span",{class:"v",text:String(APP.files.length)})),
+    el("div",{class:"row-line",style:"margin-bottom:12px"},el("span",{text:"Tamanho aproximado"}),el("span",{class:"v",text:fmtBytes(Math.round(c.bytes*4/3)+APP_SOURCE.length)})),
+    el("button",{class:"btn primary",text:"Baixar site completo (.html)",onclick:exportStandaloneSite}));
+  p.append(site);
+  const box=el("div",{class:"panel-box"});
+  box.innerHTML="<h3>Exame completo (.zip)</h3>";
+  box.append(el("div",{class:"row-line"},el("span",{text:"Arquivos"}),el("span",{class:"v",text:String(APP.files.length)})),
+    el("div",{class:"row-line",style:"margin-bottom:12px"},el("span",{text:"Tamanho"}),el("span",{class:"v",text:fmtBytes(c.bytes)})),
+    el("button",{class:"btn primary",text:"Baixar exame completo (.zip)",onclick:exportAll}));
+  p.append(box);
+  const box2=el("div",{class:"panel-box"});
+  box2.innerHTML="<h3>Por série</h3>";
+  for(const st of APP.studies)for(const s of st.series){
+    box2.append(el("div",{class:"row-line"},el("span",{text:(s.desc||"Série")+" · "+s.instances.length+" item(ns)"}),
+      el("span",{},el("button",{class:"btn ghost",text:"Baixar",onclick:()=>exportSeries(s)}))));
+  }
+  p.append(box2);
+  const box3=el("div",{class:"panel-box",style:"border-color:#2a1a1a"});
+  box3.innerHTML="<h3>Dados neste dispositivo</h3>";
+  box3.append(el("button",{class:"btn danger",text:"Apagar dados deste dispositivo",onclick:wipeAll}));
+  p.append(box3);
+}
+async function wipeAll(){
+  if(!confirm("Apagar TODOS os dados importados deste navegador? Faça o backup .zip antes. Esta ação não pode ser desfeita.")) return;
+  await idbClear("files"); await idbClear("blobs"); await idbClear("meta");
+  APP.files=[];APP.studies=[];APP.measurements={};APP.current={series:null,index:0,image:null};APP.report=null;
+  renderSeriesList();updateTopStatus();stopCine();V.frameCanvas=null;drawViewer();
+  showStageMsg("Nenhuma imagem selecionada","");
+  renderExportPage(); toast("Dados locais apagados.","ok");
+}
+
+/* =====================================================================
+   VOLUME (para MPR e MIP) — construído só de séries com volume 3D válido
+   ===================================================================== */
+async function buildVolume(s){
+  if(APP.volumes[s.id]) return APP.volumes[s.id];
+  const m0=s.instances[0].meta; const nx=m0.cols, ny=m0.rows, nz=s.instances.length;
+  if(nx*ny*nz*2 > 500*1024*1024) throw new Error("Volume grande demais para reconstruir neste navegador ("+nx+"×"+ny+"×"+nz+").");
+  const vol=new Int16Array(nx*ny*nz);
+  for(let z=0;z<nz;z++){
+    const f=s.instances[z]; const buf=await getBuf(f.id);
+    const fr=extractModality(f.meta,buf,0); if(!fr) throw new Error("Falha ao ler o corte "+(z+1));
+    const base=z*nx*ny; const v=fr.values;
+    for(let i=0;i<nx*ny;i++){ let x=v[i]; if(x>32767)x=32767; else if(x<-32768)x=-32768; vol[base+i]=x; }
+  }
+  const colSp=m0.pixelSpacing?m0.pixelSpacing[1]:1, rowSp=m0.pixelSpacing?m0.pixelSpacing[0]:1;
+  const sliceSp=s._sliceSpacing||m0.sliceThickness||1;
+  const V3={nx,ny,nz,vol,colSp,rowSp,sliceSp,series:s};
+  APP.volumes[s.id]=V3; return V3;
+}
+function planeFrame(width,height,values){ return {color:false,mono1:false,width,height,values}; }
+
+// Extrai planos do volume (vizinho mais próximo). Os cortes estão em ordem crescente de
+// posição ao longo da normal (em geral: inferior -> superior), então nos planos coronal e
+// sagital a linha da tela j corresponde a z = nz-1-j: o lado superior fica no topo,
+// como no padrão radiológico.
+function sliceAxial(V3,z){ const{nx,ny,vol}=V3; const out=new Float32Array(nx*ny); const b=z*nx*ny; for(let i=0;i<nx*ny;i++)out[i]=vol[b+i]; return planeFrame(nx,ny,out); }
+function sliceCoronal(V3,y){ const{nx,ny,nz,vol}=V3; const out=new Float32Array(nx*nz); for(let j=0;j<nz;j++){ const b=(nz-1-j)*nx*ny+y*nx; for(let x=0;x<nx;x++)out[j*nx+x]=vol[b+x]; } return planeFrame(nx,nz,out); }
+function sliceSagittal(V3,x){ const{nx,ny,nz,vol}=V3; const out=new Float32Array(ny*nz); for(let j=0;j<nz;j++){ const b=(nz-1-j)*nx*ny+x; for(let y=0;y<ny;y++)out[j*ny+y]=vol[b+y*nx]; } return planeFrame(ny,nz,out); }
+
+/* =====================================================================
+   PÁGINA MPR
+   ===================================================================== */
+const MPR={V3:null,x:0,y:0,z:0,ww:2000,wl:400};
+function renderMPR(){
+  const p=$("#page-mpr"); p.innerHTML="";
+  p.append(el("h1",{text:"Reconstrução multiplanar (MPR)"}),
+    el("div",{class:"sub",text:"Axial · Coronal · Sagital"}));
+  const volSeries=APP.studies.flatMap(st=>st.series).filter(s=>s.isVolume);
+  if(!volSeries.length){ p.append(el("div",{class:"muted-c",text:"Nenhum volume disponível."})); return; }
+  const bar=el("div",{style:"display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px"});
+  const sel=el("select",{class:"mini"});
+  volSeries.forEach((s,i)=>sel.append(el("option",{value:i,text:(s.desc||"Série")+" ("+s.instances.length+" cortes)"})));
+  const wwl=el("span",{class:"muted-c",style:"font-size:12px"});
+  bar.append(el("span",{class:"muted-c",style:"font-size:12px",text:"Série:"}),sel,
+    el("span",{style:"flex:1"}),
+    el("span",{class:"muted-c",style:"font-size:12px",text:"Janela:"}),
+    makeRange("mprWW",1,4000,MPR.ww,v=>{MPR.ww=v;drawMPRAll();}),
+    makeRange("mprWL",-1024,3071,MPR.wl,v=>{MPR.wl=v;drawMPRAll();}));
+  p.append(bar);
+  const grid=el("div",{style:"display:grid;grid-template-columns:1fr 1fr;gap:10px"});
+  for(const [id,label] of [["ax","Axial"],["co","Coronal"],["sa","Sagital"]]){
+    const cell=el("div",{class:"panel-box",style:"padding:8px;margin:0"});
+    cell.append(el("div",{style:"display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:4px"},
+      el("span",{text:label}),el("span",{id:"mpr-"+id+"-lbl"})));
+    const cv=el("canvas",{id:"mpr-"+id,style:"display:block;margin:0 auto;background:#000;border-radius:6px;cursor:crosshair;touch-action:none"});
+    cell.append(cv); grid.append(cell);
+  }
+  const info=el("div",{class:"panel-box",style:"padding:12px;margin:0"}); info.id="mprInfo";
+  grid.append(info);
+  p.append(grid);
+  sel.onchange=()=>loadMPR(volSeries[parseInt(sel.value,10)]);
+  loadMPR(volSeries[0]);
+  if(!MPR._resizeWired){ MPR._resizeWired=true; let t;
+    window.addEventListener("resize",()=>{ clearTimeout(t); t=setTimeout(()=>{ if($("#view-mpr").classList.contains("active")) drawMPRAll(); },120); }); }
+}
+function makeRange(id,min,max,val,cb){ const r=el("input",{type:"range",id,min,max,value:val,style:"width:120px",oninput:e=>cb(parseInt(e.target.value,10))}); return r; }
+
+async function loadMPR(s){
+  const info=$("#mprInfo"); info.innerHTML="<span class='muted-c'>Reconstruindo volume…</span>";
+  try{ MPR.V3=await buildVolume(s); }catch(e){ info.innerHTML="<span class='danger-c'>"+esc(e.message)+"</span>"; return; }
+  const V3=MPR.V3; MPR.x=Math.floor(V3.nx/2); MPR.y=Math.floor(V3.ny/2); MPR.z=Math.floor(V3.nz/2);
+  const m0=s.instances[0].meta; const w=suggestWindow(m0,null); MPR.ww=Math.round(m0.windowWidth||2000); MPR.wl=Math.round(m0.windowCenter!=null?m0.windowCenter:400);
+  $("#mprWW").value=MPR.ww; $("#mprWL").value=MPR.wl;
+  wireMPRCanvas("mpr-ax","ax"); wireMPRCanvas("mpr-co","co"); wireMPRCanvas("mpr-sa","sa");
+  drawMPRAll();
+  info.innerHTML="<h3 style='margin-top:0'>Volume</h3>"+
+    "<div class='row-line'><span>Dimensões</span><span class='v'>"+V3.nx+" × "+V3.ny+" × "+V3.nz+"</span></div>"+
+    "<div class='row-line'><span>Espaçamento</span><span class='v'>"+V3.colSp.toFixed(2)+" × "+V3.rowSp.toFixed(2)+" × "+V3.sliceSp.toFixed(2)+" mm</span></div>"+
+    "<div class='row-line'><span>Cursor (x,y,z)</span><span class='v' id='mprCursor'></span></div>";
+  updMprCursor();
+}
+function drawMPRAll(){ if(!MPR.V3)return; drawMPRPlane("ax"); drawMPRPlane("co"); drawMPRPlane("sa"); updMprCursor(); }
+function drawMPRPlane(id){
+  const V3=MPR.V3; let frame,hx,hy,asp,lbl;
+  if(id==="ax"){ frame=sliceAxial(V3,MPR.z); hx=MPR.x; hy=MPR.y; asp=V3.rowSp/V3.colSp; lbl="corte "+(MPR.z+1)+"/"+V3.nz; }
+  else if(id==="co"){ frame=sliceCoronal(V3,MPR.y); hx=MPR.x; hy=V3.nz-1-MPR.z; asp=V3.sliceSp/V3.colSp; lbl="y "+(MPR.y+1)+"/"+V3.ny; }
+  else { frame=sliceSagittal(V3,MPR.x); hx=MPR.y; hy=V3.nz-1-MPR.z; asp=V3.sliceSp/V3.rowSp; lbl="x "+(MPR.x+1)+"/"+V3.nx; }
+  const src=frameToCanvas(frame,MPR.ww,MPR.wl,false);
+  // cabe na largura da célula E numa altura máxima, para os três planos ficarem visíveis juntos
+  const cv=$("#mpr-"+id);
+  const avail=Math.max(120,(cv.parentElement.clientWidth||380)-16);
+  const maxH=Math.max(140,(window.innerHeight-340)/2);   // 2 linhas de planos abaixo do cabeçalho
+  const scale=Math.min(avail/frame.width, maxH/(frame.height*asp));
+  cv.width=Math.max(1,Math.round(frame.width*scale)); cv.height=Math.max(1,Math.round(frame.height*scale*asp));
+  cv.style.width=cv.width+"px"; cv.style.height=cv.height+"px";
+  const ctx=cv.getContext("2d"); ctx.imageSmoothingEnabled=true; ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.drawImage(src,0,0,cv.width,cv.height);
+  // cursor
+  ctx.strokeStyle="rgba(79,156,249,.8)"; ctx.lineWidth=1;
+  const px=hx*scale, py=hy*scale*asp;
+  ctx.beginPath(); ctx.moveTo(px,0); ctx.lineTo(px,cv.height); ctx.moveTo(0,py); ctx.lineTo(cv.width,py); ctx.stroke();
+  const lab=$("#mpr-"+id+"-lbl"); if(lab)lab.textContent=lbl;
+  cv._scale=scale; cv._asp=asp; cv._fw=frame.width; cv._fh=frame.height;
+}
+function wireMPRCanvas(cid,id){
+  const cv=$("#"+cid); if(cv._wired)return; cv._wired=true;
+  const handler=e=>{ const r=cv.getBoundingClientRect(); const sx=(e.clientX-r.left)/cv._scale; const sy=(e.clientY-r.top)/(cv._scale*cv._asp);
+    const ix=clamp(Math.round(sx),0,cv._fw-1), iy=clamp(Math.round(sy),0,cv._fh-1);
+    const nz=MPR.V3.nz;
+    if(id==="ax"){ MPR.x=ix; MPR.y=iy; } else if(id==="co"){ MPR.x=ix; MPR.z=nz-1-iy; } else { MPR.y=ix; MPR.z=nz-1-iy; }
+    drawMPRAll(); };
+  cv.addEventListener("pointerdown",e=>{cv.setPointerCapture(e.pointerId);cv._drag=true;handler(e);});
+  cv.addEventListener("pointermove",e=>{if(cv._drag)handler(e);});
+  cv.addEventListener("pointerup",e=>{cv._drag=false;});
+}
+function updMprCursor(){ const c=$("#mprCursor"); if(c)c.textContent=MPR.x+", "+MPR.y+", "+MPR.z; }
+
+/* =====================================================================
+   PÁGINA MIP (projeção de intensidade máxima — "3D" leve)
+   ===================================================================== */
+const MIPS={V3:null,dir:"ax",slab:0,center:0,ww:2000,wl:400};
+function renderMIP(){
+  const p=$("#page-mip"); p.innerHTML="";
+  MIPS.dir="ax"; MIPS.slab=0; MIPS.center=0.5;   // sincroniza o estado com os controles recém-criados
+  p.append(el("h1",{text:"Reconstrução 3D / MIP"}),
+    el("div",{class:"sub",text:"Projeção de intensidade máxima (MIP)"}));
+  const volSeries=APP.studies.flatMap(st=>st.series).filter(s=>s.isVolume);
+  if(!volSeries.length){ p.append(el("div",{class:"muted-c",text:"Nenhum volume disponível."})); return; }
+  const bar=el("div",{style:"display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px"});
+  const sel=el("select",{class:"mini"}); volSeries.forEach((s,i)=>sel.append(el("option",{value:i,text:(s.desc||"Série")})));
+  const dirSel=el("select",{class:"mini",onchange:e=>{MIPS.dir=e.target.value;setupSlab();drawMIP();}});
+  [["ax","Axial (de cima)"],["co","Coronal (de frente)"],["sa","Sagital (de lado)"]].forEach(([v,t])=>dirSel.append(el("option",{value:v,text:t})));
+  bar.append(el("span",{class:"muted-c",style:"font-size:12px",text:"Série:"}),sel,
+    el("span",{class:"muted-c",style:"font-size:12px",text:"Direção:"}),dirSel,
+    el("span",{class:"muted-c",style:"font-size:12px",text:"Espessura (slab):"}),
+    makeRange("mipSlab",0,400,0,v=>{MIPS.slab=v;scheduleMIP();$("#mipSlabLbl").textContent=v?(v+" cortes"):"volume inteiro";}),
+    el("span",{id:"mipSlabLbl",class:"muted-c",style:"font-size:11px",text:"volume inteiro"}));
+  p.append(bar);
+  const bar2=el("div",{style:"display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px"});
+  bar2.append(el("span",{class:"muted-c",style:"font-size:12px",text:"Posição do slab:"}),
+    makeRange("mipPos",0,1000,500,v=>{MIPS.center=v/1000;scheduleMIP();}),
+    el("span",{class:"muted-c",style:"font-size:12px",text:"Janela:"}),
+    makeRange("mipWW",1,4000,MIPS.ww,v=>{MIPS.ww=v;scheduleMIP();}),makeRange("mipWL",-1024,3071,MIPS.wl,v=>{MIPS.wl=v;scheduleMIP();}));
+  p.append(bar2);
+  const cell=el("div",{class:"panel-box",style:"padding:10px;text-align:center"});
+  cell.append(el("canvas",{id:"mipCanvas",style:"max-width:100%;background:#000;border-radius:6px"}));
+  p.append(cell);
+  sel.onchange=()=>loadMIP(volSeries[parseInt(sel.value,10)]);
+  loadMIP(volSeries[0]);
+}
+async function loadMIP(s){
+  const cell=$("#mipCanvas").parentElement;
+  try{ MIPS.V3=await buildVolume(s); }catch(e){ cell.innerHTML="<span class='danger-c'>"+esc(e.message)+"</span>"; return; }
+  const m0=s.instances[0].meta; MIPS.ww=Math.round(m0.windowWidth||2000); MIPS.wl=Math.round(m0.windowCenter!=null?m0.windowCenter:400);
+  $("#mipWW").value=MIPS.ww; $("#mipWL").value=MIPS.wl; setupSlab(); drawMIP();
+}
+function setupSlab(){ const V3=MIPS.V3; if(!V3)return; const max=MIPS.dir==="ax"?V3.nz:MIPS.dir==="co"?V3.ny:V3.nx; const sl=$("#mipSlab"); if(sl)sl.max=max; }
+let mipRaf=0;
+function scheduleMIP(){ if(mipRaf)return; mipRaf=requestAnimationFrame(()=>{ mipRaf=0; drawMIP(); }); }
+function drawMIP(){
+  const V3=MIPS.V3; if(!V3)return; const {nx,ny,nz,vol}=V3; const nxy=nx*ny; const dir=MIPS.dir;
+  const axisLen = dir==="ax"?nz:dir==="co"?ny:nx;
+  // slab 0 = volume inteiro; senão, "slab" cortes centrados na posição escolhida
+  let a0=0,a1=axisLen-1;
+  if(MIPS.slab>0){ const c=Math.round(MIPS.center*(axisLen-1)); a0=clamp(c-Math.floor(MIPS.slab/2),0,axisLen-1); a1=clamp(a0+MIPS.slab-1,0,axisLen-1); }
+  let w,h,asp,out;
+  if(dir==="ax"){ // projeta ao longo de z
+    w=nx;h=ny;asp=V3.rowSp/V3.colSp; out=new Float32Array(w*h).fill(-32768);
+    for(let z=a0;z<=a1;z++){ const b=z*nxy; for(let i=0;i<nxy;i++){ const v=vol[b+i]; if(v>out[i])out[i]=v; } }
+  }else if(dir==="co"){ // projeta ao longo de y; linha da tela = nz-1-z (superior no topo)
+    w=nx;h=nz;asp=V3.sliceSp/V3.colSp; out=new Float32Array(w*h).fill(-32768);
+    for(let z=0;z<nz;z++){ const row=(nz-1-z)*nx, b=z*nxy;
+      for(let y=a0;y<=a1;y++){ const by=b+y*nx; for(let x=0;x<nx;x++){ const v=vol[by+x]; if(v>out[row+x])out[row+x]=v; } } }
+  }else{ // projeta ao longo de x
+    w=ny;h=nz;asp=V3.sliceSp/V3.rowSp; out=new Float32Array(w*h).fill(-32768);
+    for(let z=0;z<nz;z++){ const row=(nz-1-z)*ny, b=z*nxy;
+      for(let y=0;y<ny;y++){ const by=b+y*nx; let m=-32768; for(let x=a0;x<=a1;x++){ const v=vol[by+x]; if(v>m)m=v; } out[row+y]=m; } }
+  }
+  const src=frameToCanvas(planeFrame(w,h,out),MIPS.ww,MIPS.wl,false);
+  const cv=$("#mipCanvas"); const target=Math.min(640, (cv.parentElement.clientWidth||600)); const scale=target/w;
+  cv.width=target; cv.height=Math.round(h*scale*asp); const ctx=cv.getContext("2d"); ctx.imageSmoothingEnabled=true;
+  ctx.clearRect(0,0,cv.width,cv.height); ctx.drawImage(src,0,0,cv.width,cv.height);
+}
+
+/* =====================================================================
+   PÁGINA FOCO NO POLEGAR (estação dedicada à mão/punho)
+   ===================================================================== */
+const THUMB={series:null,index:0,frame:null,zoom:3,ww:WINDOW_PRESETS[0].ww,wl:WINDOW_PRESETS[0].wl};
+function renderThumb(){
+  const p=$("#page-thumb"); p.innerHTML="";
+  const dicomSeries=APP.studies.flatMap(st=>st.series).filter(s=>s.kind==="dicom"&&!s.instances[0].meta.compressed);
+  if(!dicomSeries.length){ p.style.padding="22px 26px"; p.append(el("h1",{text:"Punho e mão"}),el("div",{class:"muted-c",text:"Nenhuma série disponível."})); return; }
+  p.style.padding="0";
+  const top=el("div",{style:"padding:14px 20px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center;flex-wrap:wrap"});
+  const sel=el("select",{class:"mini"}); dicomSeries.forEach((s,i)=>sel.append(el("option",{value:i,text:s.desc||"Série"})));
+  top.append(el("div",{},el("div",{style:"font-size:15px;font-weight:650",text:"Punho e mão"}),
+    el("div",{class:"muted-c",style:"font-size:11.5px",text:"Janela óssea · Lupa"})),
+    el("span",{style:"flex:1"}),el("span",{class:"muted-c",style:"font-size:12px",text:"Série:"}),sel,
+    el("button",{class:"btn ghost",text:"Abrir MPR",onclick:()=>setView("mpr")}));
+  p.append(top);
+  const main=el("div",{style:"flex:1;display:flex;min-height:0"});
+  const left=el("div",{style:"flex:1;position:relative;background:#000;min-width:0"},
+    el("canvas",{id:"thumbCanvas",style:"position:absolute;inset:0;width:100%;height:100%;cursor:crosshair"}),
+    el("canvas",{id:"thumbLoupe",width:180,height:180,style:"position:absolute;right:12px;top:12px;border:1px solid var(--accent);border-radius:8px;background:#000;pointer-events:none"}));
+  const side=el("div",{style:"width:240px;border-left:1px solid var(--border);overflow:auto;padding:12px;background:var(--surface)"});
+  const ctrl=el("div",{});
+  ctrl.append(el("div",{class:"muted-c",style:"font-size:11px;margin-bottom:4px",id:"thumbSliceLbl",text:"Corte"}),
+    makeRange("thumbSlice",0,0,0,v=>{THUMB.index=v;loadThumbInstance();}),
+    el("div",{class:"muted-c",style:"font-size:11px;margin:8px 0 4px",text:"Zoom da lupa"}),
+    makeRange("thumbZoom",2,8,THUMB.zoom,v=>{THUMB.zoom=v;}),
+    el("div",{class:"muted-c",style:"font-size:11px;margin:8px 0 4px",text:"Janela (WW / WL)"}),
+    makeRange("thumbWW",1,4000,THUMB.ww,v=>{THUMB.ww=v;redrawThumbWindow();}),
+    makeRange("thumbWL",-1024,3071,THUMB.wl,v=>{THUMB.wl=v;redrawThumbWindow();}),
+    el("div",{style:"display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"},
+      ...WINDOW_PRESETS.slice(0,3).map(pr=>el("button",{class:"btn ghost",style:"height:26px;padding:0 8px;font-size:11px",text:pr.name,
+        onclick:()=>{THUMB.ww=pr.ww;THUMB.wl=pr.wl;$("#thumbWW").value=pr.ww;$("#thumbWL").value=pr.wl;redrawThumbWindow();}}))));
+  side.append(ctrl);
+  main.append(left,side); p.append(main);
+  sel.onchange=()=>selectThumbSeries(dicomSeries[parseInt(sel.value,10)]);
+  selectThumbSeries(dicomSeries[0]);
+}
+async function selectThumbSeries(s){ THUMB.series=s; THUMB.index=Math.floor(s.instances.length/2);
+  const r=$("#thumbSlice"); r.max=s.instances.length-1; r.value=THUMB.index; await loadThumbInstance(); wireThumbLoupe(); }
+async function loadThumbInstance(){
+  const s=THUMB.series; const f=s.instances[THUMB.index]; const buf=await getBuf(f.id);
+  const fr=extractModality(f.meta,buf,0); if(!fr)return; THUMB.frame=fr;
+  const lbl=$("#thumbSliceLbl"); if(lbl) lbl.textContent="Corte "+(THUMB.index+1)+" / "+s.instances.length;
+  redrawThumbWindow();
+  // dica inicial na lupa (antes do primeiro movimento do cursor)
+  const lp=$("#thumbLoupe"); if(lp&&!lp._used){ const c=lp.getContext("2d"); c.clearRect(0,0,180,180);
+    c.fillStyle="#6B7C91"; c.font="12px system-ui,sans-serif"; c.textAlign="center";
+    c.fillText("Passe o cursor",90,84); c.fillText("sobre a imagem",90,102); }
+}
+function redrawThumbWindow(){ if(!THUMB.frame)return; THUMB.src=frameToCanvas(THUMB.frame,THUMB.ww,THUMB.wl,false); drawThumb(); }
+function drawThumb(){
+  const cv=$("#thumbCanvas"); if(!cv||!THUMB.src)return; const dpr=Math.min(window.devicePixelRatio||1,2);
+  const w=cv.clientWidth,h=cv.clientHeight; cv.width=w*dpr;cv.height=h*dpr; const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h); const src=THUMB.src; const sc=Math.min(w/src.width,h/src.height)*0.96;
+  const dw=src.width*sc, dh=src.height*sc; THUMB._rect={x:(w-dw)/2,y:(h-dh)/2,sc};
+  ctx.drawImage(src,(w-dw)/2,(h-dh)/2,dw,dh);
+}
+function wireThumbLoupe(){ const cv=$("#thumbCanvas"); if(cv._wired)return; cv._wired=true;
+  cv.addEventListener("pointermove",e=>{ const r=cv.getBoundingClientRect(); const mx=e.clientX-r.left,my=e.clientY-r.top;
+    const rc=THUMB._rect; if(!rc)return; const ix=(mx-rc.x)/rc.sc, iy=(my-rc.y)/rc.sc; const lp=$("#thumbLoupe"); lp._used=true; const lc=lp.getContext("2d");
+    lc.clearRect(0,0,180,180); lc.imageSmoothingEnabled=false; const z=THUMB.zoom; const sw=180/z;
+    lc.drawImage(THUMB.src, ix-sw/2, iy-sw/2, sw, sw, 0,0,180,180);
+    lc.strokeStyle="rgba(88,215,209,.9)"; lc.beginPath(); lc.moveTo(90,80);lc.lineTo(90,100);lc.moveTo(80,90);lc.lineTo(100,90);lc.stroke();
+  });
+  if(!THUMB._resizeWired){ THUMB._resizeWired=true;
+    window.addEventListener("resize",()=>{ if($("#view-thumb").classList.contains("active")) drawThumb(); }); }
+}
+
+/* =====================================================================
+   INICIALIZAÇÃO
+   ===================================================================== */
+async function boot(){
+  captureEmbedded();   // antes de qualquer mudança no DOM
+  // navegação do rail
+  $$("#rail .nav").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
+  $("#btnImportTop").onclick=()=>setView("import");
+  $("#btnExportTop").onclick=()=>setView("export");
+  $("#btnImportEmpty").onclick=()=>setView("import");
+  const bs=$("#btnSeries"); if(bs) bs.onclick=()=>$("#sidebar").classList.toggle("open");
+  $("#modalClose").onclick=closeModal;
+  $("#modal").addEventListener("click",e=>{ if(e.target.id==="modal") closeModal(); });
+
+  // seletores de arquivo
+  $("#fileInput").addEventListener("change",e=>{ const f=Array.from(e.target.files||[]); e.target.value=""; if(f.length) runImportUI(f); });
+  $("#folderInput").addEventListener("change",e=>{ const f=Array.from(e.target.files||[]); e.target.value=""; if(f.length) runImportUI(f); });
+
+  // arrastar e soltar em qualquer lugar da janela
+  window.addEventListener("dragover",e=>{ e.preventDefault(); });
+  window.addEventListener("drop",async e=>{ e.preventDefault(); const files=await entriesFromDataTransfer(e.dataTransfer); if(files.length) runImportUI(files); });
+
+  initViewerInteraction();
+  initControls();
+  buildToolbar();
+
+  try{ APP.db=await openDB(); }
+  catch(e){ APP.db=null; toast("Armazenamento local indisponível neste navegador/modo. Os dados ficarão só na memória — use o backup .zip.","warn",9000); }
+  try{ await loadAllFromDB(); }catch(e){ console.error(e); }
+  try{ await loadEmbedded(); }catch(e){ hideLoading(); console.error(e); toast("Falha ao carregar o exame embutido.","err",8000); }
+  renderSeriesList();
+  updateTopStatus();
+  setView(APP.files.length?"overview":"import");
+  APP.started=true;
+}
+document.addEventListener("DOMContentLoaded",boot);
+</script>
+</body>
+</html>
