@@ -1,0 +1,29 @@
+# Overrides pessoais do Claude Code. NAO versionar: cada pessoa ajusta as
+# proprias permissoes e hooks aqui sem afetar o resto do time.
+.claude/settings.local.json
+
+# Diretorios de trabalho que o Claude Code cria no repositorio.
+.claude/worktrees/
+
+# Ruido de sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Ruido de editor
+*.swp
+*.swo
+*~
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Segredos. Reforca, no nivel do git, o que .claude/settings.json ja nega
+# no nivel de leitura do Claude.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+id_rsa*
+id_ed25519*

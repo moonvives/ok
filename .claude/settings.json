@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git status *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(git show-ref *)",
+      "Bash(git symbolic-ref *)",
+      "Bash(git rev-parse *)",
+      "Bash(git ls-files *)",
+      "Bash(git ls-remote *)",
+      "Bash(git describe *)",
+      "Bash(git blame *)",
+      "Bash(git shortlog *)",
+      "Bash(git tag -l *)",
+      "Bash(git tag --list *)",
+      "Bash(git stash list *)",
+      "Bash(git remote -v)",
+      "Bash(git remote show *)",
+      "Bash(git fetch *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(file *)",
+      "Bash(stat *)",
+      "Bash(tree *)",
+      "Bash(pwd)",
+      "Bash(diff *)",
+      "Bash(sort *)",
+      "Bash(uniq *)",
+      "Bash(sed -n *)",
+      "Bash(rg *)",
+      "Bash(jq *)",
+      "Bash(which *)",
+      "Bash(command -v *)",
+      "Bash(echo *)"
+    ],
+    "deny": [
+      "Bash(sudo *)",
+      "Bash(rm -rf *)",
+      "Bash(env)",
+      "Bash(printenv *)",
+      "Bash(git push --force *)",
+      "Bash(git push -f *)",
+      "Bash(git push origin main*)",
+      "Bash(git push origin master*)",
+      "Bash(git reset --hard *)",
+      "Bash(git clean *)",
+      "Bash(git branch -d *)",
+      "Bash(git branch -D *)",
+      "Bash(git filter-branch *)",
+      "Bash(git update-ref -d *)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Read(**/id_rsa*)",
+      "Read(**/id_ed25519*)",
+      "Read(**/.ssh/**)",
+      "Read(**/.aws/**)",
+      "Read(**/.npmrc)",
+      "Edit(./.git/**)"
+    ],
+    "ask": [
+      "Bash(git rebase *)",
+      "Bash(git push --force-with-lease *)",
+      "Bash(git commit --amend *)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/session-start.sh\"",
+            "timeout": 10,
+            "statusMessage": "Lendo o estado do repositorio..."
+          }
+        ]
+      }
+    ]
+  }
+}
