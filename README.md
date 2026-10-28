@@ -1,5 +1,11 @@
 # Medicina e vagas para pessoas com deficiência (PcD): banco de dados
 
+## Visualização dos dados
+
+- **[Gráficos e tabelas visíveis no GitHub](docs/painel.md)** — evolução anual, comparação dos cortes PcD/AC e tabelas resumidas.
+- **[Painel interativo HTML](docs/painel.html)** — filtros por ano, estado, procedência escolar, tabela pesquisável, exportação CSV, notas 2026, editais e jurisprudência. Para interagir com o arquivo, baixe-o ou publique a pasta `/docs` no GitHub Pages. Os dados estão embutidos e não dependem de serviços externos.
+
+
 Notas de corte de **todos os cursos de Medicina do SiSU de 2020 a 2025** (523 ofertas e 3.935 linhas de modalidade), mais as regras de vaga PcD de cada instituição. O foco é responder a uma pergunta: **onde existe vaga PcD de Medicina para quem estudou em escola particular, e quanto ela costuma exigir?**
 
 Também traz os processos de 2026 e 2027 que conferi um a um, a leitura do Edital UFPI 06/2026 e uma tabela de decisões judiciais com o grau de verificação de cada uma.
