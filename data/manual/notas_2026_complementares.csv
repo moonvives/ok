@@ -1,0 +1,25 @@
+ano,ies_sigla,municipio,processo,modalidade,aceita_escola_privada,nota_corte,observacao,tipo_fonte,fonte_url
+2026,UFS,Aracaju,SiSU 2026 chamada regular,AC,sim,804.72,Menor aprovado da ampla concorrência,oficial,https://sisu.ufs.br/uploads/content_attach/path/42599/_CHAMADA_REGULAR__SISU-2026_2026-01-30.pdf
+2026,UFS,Aracaju,SiSU 2026 chamada regular,V1 (PcD de qualquer escola),sim,803.39,1 vaga,oficial,https://sisu.ufs.br/uploads/content_attach/path/42599/_CHAMADA_REGULAR__SISU-2026_2026-01-30.pdf
+2026,UFS,Aracaju,SiSU 2026 chamada regular,LI_PCD,nao,742.90,,oficial,https://sisu.ufs.br/uploads/content_attach/path/42599/_CHAMADA_REGULAR__SISU-2026_2026-01-30.pdf
+2026,UFS,Aracaju,SiSU 2026 chamada regular,LB_PCD,nao,726.92,,oficial,https://sisu.ufs.br/uploads/content_attach/path/42599/_CHAMADA_REGULAR__SISU-2026_2026-01-30.pdf
+2026,UFS,Lagarto,SiSU 2026 chamada regular,AC,sim,796.74,Menor aprovado da ampla concorrência,oficial,https://sisu.ufs.br/uploads/content_attach/path/42599/_CHAMADA_REGULAR__SISU-2026_2026-01-30.pdf
+2026,UFS,Lagarto,SiSU 2026 chamada regular,V1 (PcD de qualquer escola),sim,788.49,1 vaga,oficial,https://sisu.ufs.br/uploads/content_attach/path/42599/_CHAMADA_REGULAR__SISU-2026_2026-01-30.pdf
+2026,UFS,Lagarto,SiSU 2026 chamada regular,LI_PCD,nao,741.07,,oficial,https://sisu.ufs.br/uploads/content_attach/path/42599/_CHAMADA_REGULAR__SISU-2026_2026-01-30.pdf
+2026,UFS,Lagarto,SiSU 2026 chamada regular,LB_PCD,nao,717.05,,oficial,https://sisu.ufs.br/uploads/content_attach/path/42599/_CHAMADA_REGULAR__SISU-2026_2026-01-30.pdf
+2026,UFPI,Teresina,SiSU 2026,AC,sim,810.44,,secundaria,https://g1.globo.com/pi/piaui/ingresso-universitario/noticia/2026/01/29/cursos-mais-disputados-ufpi-2026.ghtml
+2026,UFPI,Teresina,SiSU 2026,LI_PCD,nao,753.62,Tabela por modalidade de jornal; não conferida na lista oficial,secundaria,https://www.otempo.com.br/educacao/estudantes/nota-de-corte/ufpi
+2026,UFPI,Teresina,SiSU 2026,LB_PCD,nao,715.68,Tabela por modalidade de jornal; não conferida na lista oficial,secundaria,https://www.otempo.com.br/educacao/estudantes/nota-de-corte/ufpi
+2026,UFPI,Picos,SiSU 2026,AC,sim,791.21,,secundaria,https://g1.globo.com/pi/piaui/ingresso-universitario/noticia/2026/01/29/cursos-mais-disputados-ufpi-2026.ghtml
+2026,UFPI,Picos,SiSU 2026,LI_PCD,nao,728.02,Tabela por modalidade de jornal; não conferida na lista oficial,secundaria,https://www.otempo.com.br/educacao/estudantes/nota-de-corte/ufpi
+2026,UFPI,Picos,SiSU 2026,LB_PCD,nao,707.71,Tabela por modalidade de jornal; não conferida na lista oficial,secundaria,https://www.otempo.com.br/educacao/estudantes/nota-de-corte/ufpi
+2026,UESPI,Teresina,SiSU 2026,AC,sim,798.69,,secundaria,https://www.otempo.com.br/educacao/estudantes/nota-de-corte/uespi
+2026,UESPI,Teresina,SiSU 2026,"AF2 (PcD de escola pública com renda até 1,5 SM)",nao,703.39,Tabela por modalidade de jornal; não conferida na lista oficial,secundaria,https://www.otempo.com.br/educacao/estudantes/nota-de-corte/uespi
+2026,UFPI,Floriano,Edital UFPI 06/2026 (ingresso 2026.2; EPC),AC,sim,795.07,12 vagas; maior nota 848.11; EPC não é a média do SiSU,oficial,https://portalclubenews.com/wp-content/uploads/2026/07/cargos062026resultadofinal1_1.pdf
+2026,UFPI,Floriano,Edital UFPI 06/2026 (ingresso 2026.2; EPC),PCD-2 (LI_PCD),nao,731.62,1 vaga,oficial,https://portalclubenews.com/wp-content/uploads/2026/07/cargos062026resultadofinal1_1.pdf
+2026,UFPI,Floriano,Edital UFPI 06/2026 (ingresso 2026.2; EPC),PCD-1 (LB_PCD),nao,726.23,1 vaga,oficial,https://portalclubenews.com/wp-content/uploads/2026/07/cargos062026resultadofinal1_1.pdf
+2026,UFPI,Floriano,Edital UFPI 06/2026 (ingresso 2026.2; EPC),EP-2 (LI_EP),nao,783.27,1 vaga,oficial,https://portalclubenews.com/wp-content/uploads/2026/07/cargos062026resultadofinal1_1.pdf
+2026,UFPI,Floriano,Edital UFPI 06/2026 (ingresso 2026.2; EPC),EP-1 (LB_EP),nao,783.22,1 vaga,oficial,https://portalclubenews.com/wp-content/uploads/2026/07/cargos062026resultadofinal1_1.pdf
+2026,UFPI,Floriano,Edital UFPI 06/2026 (ingresso 2026.2; EPC),PPI-2 (LI_PPI),nao,726.02,6 vagas,oficial,https://portalclubenews.com/wp-content/uploads/2026/07/cargos062026resultadofinal1_1.pdf
+2026,UFPI,Floriano,Edital UFPI 06/2026 (ingresso 2026.2; EPC),PPI-1 (LB_PPI),nao,720.59,7 vagas,oficial,https://portalclubenews.com/wp-content/uploads/2026/07/cargos062026resultadofinal1_1.pdf
+2026,UFPI,Floriano,Edital UFPI 06/2026 (ingresso 2026.2; EPC),Q-1 (LB_Q),nao,693.78,1 vaga,oficial,https://portalclubenews.com/wp-content/uploads/2026/07/cargos062026resultadofinal1_1.pdf
